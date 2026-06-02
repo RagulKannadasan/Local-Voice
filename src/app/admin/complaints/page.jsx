@@ -126,7 +126,7 @@ export default function AdminComplaints() {
           <Send className="w-8 h-8" />
         </div>
         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Permission Denied</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400">You do not have the required "manage_complaints" permission to view or edit complaints.</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">You do not have the required &quot;manage_complaints&quot; permission to view or edit complaints.</p>
       </div>
     );
   }

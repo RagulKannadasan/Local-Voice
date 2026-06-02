@@ -3,6 +3,8 @@ import connectToDatabase from '@/lib/mongodb';
 import Poll from '@/models/Poll';
 import User from '@/models/User';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request) {
   try {
     await connectToDatabase();
