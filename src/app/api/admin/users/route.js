@@ -66,3 +66,39 @@ export async function PUT(request) {
     return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 });
   }
 }
+
+export async function DELETE(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    const requesterEmail = searchParams.get('requesterEmail');
+
+    if (!id || !requesterEmail) {
+      return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
+    }
+
+    await connectToDatabase();
+
+    const requester = await User.findOne({ email: requesterEmail });
+    if (!requester || requester.role !== 'super_admin') {
+      return NextResponse.json({ success: false, error: 'Forbidden: Super Admin only' }, { status: 403 });
+    }
+
+    const targetUser = await User.findById(id);
+    if (!targetUser) {
+      return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
+    }
+
+    // Prevent stripping super_admin from ragulkannadasan@gmail.com
+    if (targetUser.email === 'ragulkannadasan@gmail.com') {
+       return NextResponse.json({ success: false, error: 'Cannot delete Super Admin' }, { status: 403 });
+    }
+
+    await User.findByIdAndDelete(id);
+
+    return NextResponse.json({ success: true, message: 'User deleted successfully' }, { status: 200 });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 });
+  }
+}

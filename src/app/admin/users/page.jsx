@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Shield, ShieldAlert, User, CheckCircle, Loader2 } from 'lucide-react';
+import { Shield, ShieldAlert, User, CheckCircle, Loader2, Trash2 } from 'lucide-react';
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
@@ -10,6 +10,7 @@ export default function AdminUsers() {
   
   // Update state
   const [updatingId, setUpdatingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     const saved = localStorage.getItem('localVoice_profile');
@@ -86,6 +87,27 @@ export default function AdminUsers() {
     }
   };
 
+  const handleDelete = async (targetUserId) => {
+    if (!confirm('Are you sure you want to completely delete this user?')) return;
+    
+    setDeletingId(targetUserId);
+    try {
+      const res = await fetch(`/api/admin/users?id=${targetUserId}&requesterEmail=${currentUser.email}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        setUsers(users.filter(u => u._id !== targetUserId));
+      } else {
+        const data = await res.json();
+        alert(data.error || "Failed to delete user");
+      }
+    } catch (error) {
+      alert("Network error.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -111,6 +133,16 @@ export default function AdminUsers() {
               <div>
                 <h3 className="font-bold text-gray-900 dark:text-gray-100">{u.name}</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400">{u.email}</p>
+                {currentUser?.role === 'super_admin' && u.email !== 'ragulkannadasan@gmail.com' && (
+                  <button 
+                    onClick={() => handleDelete(u._id)}
+                    disabled={deletingId === u._id}
+                    className="mt-2 flex items-center space-x-1 text-xs text-red-500 hover:text-red-600 font-medium disabled:opacity-50"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete User</span>
+                  </button>
+                )}
               </div>
               
               <div className="flex items-center space-x-2">

@@ -44,3 +44,32 @@ export async function POST(request) {
     return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 });
   }
 }
+
+export async function DELETE(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    const requesterEmail = searchParams.get('requesterEmail');
+
+    if (!id || !requesterEmail) {
+      return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
+    }
+
+    await connectToDatabase();
+
+    const requester = await User.findOne({ email: requesterEmail });
+    if (!requester || requester.role !== 'super_admin') {
+      return NextResponse.json({ success: false, error: 'Forbidden: Super Admin only' }, { status: 403 });
+    }
+
+    const announcement = await Announcement.findByIdAndDelete(id);
+    if (!announcement) {
+      return NextResponse.json({ success: false, error: 'Announcement not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, message: 'Announcement deleted successfully' }, { status: 200 });
+  } catch (error) {
+    console.error('Error deleting announcement:', error);
+    return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 });
+  }
+}

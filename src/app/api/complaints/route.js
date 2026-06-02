@@ -111,3 +111,32 @@ export async function PUT(request) {
     return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 });
   }
 }
+
+export async function DELETE(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const complaintId = searchParams.get('id');
+    const requesterEmail = searchParams.get('requesterEmail');
+
+    if (!complaintId || !requesterEmail) {
+      return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
+    }
+
+    await connectToDatabase();
+
+    const requester = await User.findOne({ email: requesterEmail });
+    if (!requester || requester.role !== 'super_admin') {
+      return NextResponse.json({ success: false, error: 'Forbidden: Super Admin only' }, { status: 403 });
+    }
+
+    const complaint = await Complaint.findByIdAndDelete(complaintId);
+    if (!complaint) {
+      return NextResponse.json({ success: false, error: 'Complaint not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, message: 'Complaint deleted successfully' }, { status: 200 });
+  } catch (error) {
+    console.error('Error deleting complaint:', error);
+    return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 });
+  }
+}

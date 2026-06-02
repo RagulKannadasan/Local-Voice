@@ -11,6 +11,7 @@ export default function AdminPolls() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [hasPermission, setHasPermission] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
   
   const [question, setQuestion] = useState('');
   const [options, setOptions] = useState([
@@ -97,6 +98,26 @@ export default function AdminPolls() {
       alert("Network error. Please try again.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm('Are you sure you want to delete this poll? This cannot be undone.')) return;
+    
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/polls?id=${id}&requesterEmail=${currentUser.email}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        setPolls(polls.filter(p => (p.id || p._id) !== id));
+      } else {
+        alert("Failed to delete poll");
+      }
+    } catch (error) {
+      alert("Network error.");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -212,9 +233,22 @@ export default function AdminPolls() {
                   );
                 })}
               </div>
-              <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 flex justify-between text-xs text-gray-500 dark:text-gray-400">
-                <span>By {poll.author}</span>
-                <span>{new Date(poll.createdAt).toLocaleDateString()}</span>
+              <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
+                <div>
+                  <span>By {poll.author}</span>
+                  <span className="mx-2">•</span>
+                  <span>{new Date(poll.createdAt).toLocaleDateString()}</span>
+                </div>
+                {currentUser?.role === 'super_admin' && (
+                  <button
+                    onClick={() => handleDelete(poll.id || poll._id)}
+                    disabled={deletingId === (poll.id || poll._id)}
+                    className="flex items-center space-x-1 text-red-500 hover:text-red-600 font-medium disabled:opacity-50"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete</span>
+                  </button>
+                )}
               </div>
             </div>
           ))

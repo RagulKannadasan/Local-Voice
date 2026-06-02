@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import clsx from 'clsx';
-import { MapPin, CheckCircle, Clock, Send, Mail, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { MapPin, CheckCircle, Clock, Send, Mail, Image as ImageIcon, Loader2, Trash } from 'lucide-react';
 
 export default function AdminComplaints() {
   const [complaints, setComplaints] = useState([]);
@@ -78,6 +78,26 @@ export default function AdminComplaints() {
         });
       } else {
         alert("Failed to update status");
+      }
+    } catch (error) {
+      alert("Network error.");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm('Are you sure you want to completely delete this complaint? This cannot be undone.')) return;
+    
+    setUpdatingId(id);
+    try {
+      const res = await fetch(`/api/complaints?id=${id}&requesterEmail=${currentUser.email}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        setComplaints(complaints.filter(c => c._id !== id));
+      } else {
+        alert("Failed to delete complaint");
       }
     } catch (error) {
       alert("Network error.");
@@ -192,6 +212,16 @@ export default function AdminComplaints() {
                   >
                     <CheckCircle className="w-3.5 h-3.5" />
                     <span>Resolve</span>
+                  </button>
+                )}
+                {currentUser?.role === 'super_admin' && (
+                  <button 
+                    onClick={() => handleDelete(c._id)}
+                    disabled={updatingId === c._id}
+                    className="w-full md:w-32 py-1.5 text-xs font-medium bg-red-50 text-red-700 border border-red-200 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50 flex items-center justify-center space-x-1"
+                  >
+                    <Trash className="w-3.5 h-3.5" />
+                    <span>Delete</span>
                   </button>
                 )}
               </div>
