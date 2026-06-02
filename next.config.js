@@ -11,4 +11,4 @@ const nextConfig = {
   // swcMinify removed since it's unrecognized in Next.js 15+
 };
 
-module.exports = withPWA(nextConfig);
+module.exports = nextConfig;
