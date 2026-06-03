@@ -24,10 +24,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="apple-touch-icon" href="/icon-192x192.png" />
-      </head>
-      <body className="font-sans bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+      <body className="font-sans bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300 overflow-x-hidden">
         <Providers>
           <Navigation />
           <main className="md:ml-64 pb-16 md:pb-0 min-h-screen">
