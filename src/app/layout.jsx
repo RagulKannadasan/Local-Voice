@@ -13,7 +13,6 @@ export const viewport = {
 export const metadata = {
   title: "Local Voice",
   description: "Community platform for Kavarappattu village",
-  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
