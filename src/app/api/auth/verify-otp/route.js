@@ -43,6 +43,7 @@ export async function POST(request) {
         id: user._id,
         email: user.email,
         name: user.name,
+        username: user.username,
         phone: user.phone,
         address: user.address,
         role: user.role,
