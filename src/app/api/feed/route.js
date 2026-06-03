@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import Post from '@/models/Post';
+import User from '@/models/User';
 
 export async function GET() {
   try {
@@ -83,6 +84,35 @@ export async function PUT(request) {
     return NextResponse.json({ success: true, post }, { status: 200 });
   } catch (error) {
     console.error('Error updating post:', error);
+    return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const postId = searchParams.get('id');
+    const requesterEmail = searchParams.get('requesterEmail');
+
+    if (!postId || !requesterEmail) {
+      return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
+    }
+
+    await connectToDatabase();
+    
+    const requester = await User.findOne({ email: requesterEmail });
+    if (!requester || requester.role !== 'super_admin') {
+       return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+    }
+
+    const post = await Post.findByIdAndDelete(postId);
+    if (!post) {
+      return NextResponse.json({ success: false, error: 'Post not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, message: 'Post deleted successfully' }, { status: 200 });
+  } catch (error) {
+    console.error('Error deleting post:', error);
     return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 });
   }
 }

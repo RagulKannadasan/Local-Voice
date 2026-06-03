@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Heart, MessageCircle, Share2, Send, Camera, Loader2, ArrowRight } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Send, Camera, Loader2, ArrowRight, Trash2 } from 'lucide-react';
 import clsx from 'clsx';
 import { useLanguage } from '@/lib/LanguageContext';
 
@@ -155,6 +155,28 @@ export default function FeedPage() {
     }
   };
 
+  const handleDeletePost = async (postId) => {
+    if (!confirm('Are you sure you want to delete this post? This action cannot be undone.')) return;
+    
+    // Optimistic update
+    const previousPosts = [...posts];
+    setPosts(posts.filter(p => p._id !== postId));
+
+    try {
+      const res = await fetch(`/api/feed?id=${postId}&requesterEmail=${currentUser.email}`, {
+        method: 'DELETE'
+      });
+      if (!res.ok) {
+        setPosts(previousPosts);
+        const data = await res.json();
+        alert(data.error || 'Failed to delete post');
+      }
+    } catch (error) {
+      setPosts(previousPosts);
+      alert('Network error while deleting post');
+    }
+  };
+
   const toggleComments = (postId) => {
     setExpandedComments(prev => ({ ...prev, [postId]: !prev[postId] }));
   };
@@ -257,7 +279,7 @@ export default function FeedPage() {
                 <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex-shrink-0 flex items-center justify-center font-bold uppercase overflow-hidden">
                   {post.authorName.charAt(0)}
                 </div>
-                <div>
+                <div className="flex-1">
                   <h3 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center space-x-2">
                     <span>{post.authorName}</span>
                     {post.authorUsername && <span className="text-xs font-normal text-blue-500">@{post.authorUsername}</span>}
@@ -266,6 +288,15 @@ export default function FeedPage() {
                     {new Date(post.createdAt).toLocaleDateString()} {t("at", "அன்று")} {new Date(post.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
+                {currentUser?.role === 'super_admin' && (
+                  <button 
+                    onClick={() => handleDeletePost(post._id)}
+                    className="text-gray-400 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20"
+                    title="Delete Post"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
               </div>
 
               <p className="text-gray-800 dark:text-gray-200 text-sm mb-3 leading-relaxed whitespace-pre-wrap">
