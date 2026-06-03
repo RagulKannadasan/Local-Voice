@@ -44,6 +44,7 @@ export async function POST(request) {
         email: user.email,
         name: user.name,
         username: user.username,
+        profilePhoto: user.profilePhoto,
         phone: user.phone,
         address: user.address,
         role: user.role,

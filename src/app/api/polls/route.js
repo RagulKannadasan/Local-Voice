@@ -110,6 +110,7 @@ export async function PUT(request) {
     poll.totalVotes += 1;
     poll.votedUsers.push(userEmail);
 
+    poll.markModified('options');
     await poll.save();
 
     return NextResponse.json({ success: true, message: 'Vote recorded successfully' }, { status: 200 });

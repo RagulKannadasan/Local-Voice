@@ -14,6 +14,7 @@ export default function AnnouncementsPage() {
   
   // Polls State
   const [polls, setPolls] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
 
   const { t } = useLanguage();
 
@@ -29,7 +30,7 @@ export default function AnnouncementsPage() {
 
   const fetchAnnouncements = async () => {
     try {
-      const res = await fetch('/api/announcements');
+      const res = await fetch('/api/announcements', { cache: 'no-store' });
       const data = await res.json();
       if (res.ok) {
         setAnnouncements(data.announcements);
@@ -41,11 +42,9 @@ export default function AnnouncementsPage() {
     }
   };
 
-  const [currentUser, setCurrentUser] = useState(null);
-  
   const fetchPolls = async () => {
     try {
-      const res = await fetch('/api/polls');
+      const res = await fetch('/api/polls', { cache: 'no-store' });
       const data = await res.json();
       if (res.ok) {
         setPolls(data.polls);

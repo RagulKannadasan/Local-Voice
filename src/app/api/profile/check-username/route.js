@@ -14,12 +14,12 @@ export async function GET(request) {
       return NextResponse.json({ available: false, error: 'Username is required' }, { status: 400 });
     }
 
-    // Basic validation: alphanumeric and underscores only, length 3-20
-    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+    // Basic validation: alphanumeric and underscores only, length 3-20, only lowercase
+    const usernameRegex = /^[a-z0-9_]{3,20}$/;
     if (!usernameRegex.test(username)) {
       return NextResponse.json({ 
         available: false, 
-        error: 'Must be 3-20 characters, containing only letters, numbers, or underscores' 
+        error: 'Must be 3-20 characters, containing only lowercase letters, numbers, or underscores' 
       });
     }
 

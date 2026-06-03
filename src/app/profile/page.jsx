@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { User, Mail, Phone, MapPin, Edit3, LogOut, FileText, Settings, Loader2 } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Edit3, LogOut, FileText, Settings, Loader2, Camera } from 'lucide-react';
 import clsx from 'clsx';
 import { useLanguage } from '@/lib/LanguageContext';
 
@@ -12,6 +12,7 @@ export default function ProfilePage() {
     phone: '',
     address: '',
     username: '',
+    profilePhoto: '',
     isLoggedIn: false
   });
 
@@ -44,18 +45,22 @@ export default function ProfilePage() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setProfile({ ...profile, [name]: value });
+    let finalValue = value;
+    if (name === 'username') {
+      finalValue = value.toLowerCase();
+    }
+    setProfile({ ...profile, [name]: finalValue });
 
     if (name === 'username') {
       if (checkTimeoutRef.current) clearTimeout(checkTimeoutRef.current);
       
-      const newUsername = value.trim();
+      const newUsername = finalValue.trim();
       if (!newUsername) {
         setUsernameStatus('');
         return;
       }
 
-      const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+      const usernameRegex = /^[a-z0-9_]{3,20}$/;
       if (!usernameRegex.test(newUsername)) {
         setUsernameStatus('INVALID');
         return;
@@ -85,7 +90,8 @@ export default function ProfilePage() {
           name: profile.name,
           phone: profile.phone,
           address: profile.address,
-          username: profile.username
+          username: profile.username,
+          profilePhoto: profile.profilePhoto
         }),
       });
       const data = await res.json();
@@ -109,6 +115,7 @@ export default function ProfilePage() {
       phone: '',
       address: '',
       username: '',
+      profilePhoto: '',
       isLoggedIn: false
     };
     setProfile(emptyProfile);
@@ -163,6 +170,7 @@ export default function ProfilePage() {
           email: data.user.email,
           name: data.user.name || 'Local Voice User',
           username: data.user.username || '',
+          profilePhoto: data.user.profilePhoto || '',
           phone: data.user.phone || '',
           address: data.user.address || '',
           role: data.user.role,
@@ -243,10 +251,61 @@ export default function ProfilePage() {
         <div className="h-32 bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-700 dark:to-indigo-900"></div>
         <div className="px-6 pb-6 relative">
           <div className="flex justify-between items-end -mt-12 mb-4">
-            <div className="w-24 h-24 bg-white dark:bg-gray-900 rounded-full p-1 shadow-md">
-              <div className="w-full h-full bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center text-3xl font-bold text-gray-500 dark:text-gray-400">
-                {profile.name.charAt(0)}
+            <div className="relative group">
+              <div className="w-24 h-24 bg-white dark:bg-gray-900 rounded-full p-1 shadow-md">
+                <div className="w-full h-full bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center text-3xl font-bold text-gray-500 dark:text-gray-400 overflow-hidden relative">
+                  {profile.profilePhoto ? (
+                    <img src={profile.profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    profile.name.charAt(0)
+                  )}
+                </div>
               </div>
+              {isEditing && (
+                <label className="absolute bottom-0 right-0 bg-blue-600 text-white p-2 rounded-full shadow-lg cursor-pointer hover:bg-blue-700 transition-colors">
+                  <Camera className="w-4 h-4" />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = (event) => {
+                        const img = new Image();
+                        img.onload = () => {
+                          const canvas = document.createElement('canvas');
+                          const MAX_WIDTH = 250;
+                          const MAX_HEIGHT = 250;
+                          let width = img.width;
+                          let height = img.height;
+
+                          if (width > height) {
+                            if (width > MAX_WIDTH) {
+                              height *= MAX_WIDTH / width;
+                              width = MAX_WIDTH;
+                            }
+                          } else {
+                            if (height > MAX_HEIGHT) {
+                              width *= MAX_HEIGHT / height;
+                              height = MAX_HEIGHT;
+                            }
+                          }
+                          canvas.width = width;
+                          canvas.height = height;
+                          const ctx = canvas.getContext('2d');
+                          ctx.drawImage(img, 0, 0, width, height);
+                          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
+                          setProfile(prev => ({ ...prev, profilePhoto: compressedBase64 }));
+                        };
+                        img.src = event.target.result;
+                      };
+                      reader.readAsDataURL(file);
+                    }}
+                  />
+                </label>
+              )}
             </div>
             {!isEditing && (
               <button onClick={() => setIsEditing(true)} className="bg-gray-100 dark:bg-gray-800 p-2 rounded-full text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
@@ -263,7 +322,7 @@ export default function ProfilePage() {
                 {usernameStatus === 'CHECKING' && <p className="text-xs text-blue-500 mt-1 flex items-center"><Loader2 className="w-3 h-3 animate-spin mr-1"/> Checking availability...</p>}
                 {usernameStatus === 'AVAILABLE' && <p className="text-xs text-green-500 mt-1 font-medium">Username is available!</p>}
                 {usernameStatus === 'TAKEN' && <p className="text-xs text-red-500 mt-1 font-medium">Username is already taken.</p>}
-                {usernameStatus === 'INVALID' && <p className="text-xs text-red-500 mt-1 font-medium">3-20 chars, letters, numbers, underscores only.</p>}
+                {usernameStatus === 'INVALID' && <p className="text-xs text-red-500 mt-1 font-medium">3-20 chars, lowercase letters, numbers, underscores only.</p>}
               </div>
               <input name="email" type="email" value={profile.email} disabled className="w-full text-gray-500 dark:text-gray-500 p-2 bg-transparent border border-gray-200 dark:border-gray-700 rounded-lg opacity-60 cursor-not-allowed" title="Email cannot be changed" />
               <input name="phone" value={profile.phone} onChange={handleChange} className="w-full text-gray-600 dark:text-gray-400 p-2 bg-transparent border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />

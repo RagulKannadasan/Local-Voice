@@ -4,7 +4,7 @@ import User from '@/models/User';
 
 export async function PUT(request) {
   try {
-    const { email, name, phone, address, username } = await request.json();
+    const { email, name, phone, address, username, profilePhoto } = await request.json();
 
     if (!email) {
       return NextResponse.json({ success: false, error: 'Email is required' }, { status: 400 });
@@ -33,6 +33,10 @@ export async function PUT(request) {
     targetUser.name = name || targetUser.name;
     targetUser.phone = phone || targetUser.phone;
     targetUser.address = address || targetUser.address;
+    
+    if (profilePhoto !== undefined) {
+      targetUser.profilePhoto = profilePhoto;
+    }
 
     await targetUser.save();
 
@@ -44,6 +48,7 @@ export async function PUT(request) {
         email: targetUser.email,
         name: targetUser.name,
         username: targetUser.username,
+        profilePhoto: targetUser.profilePhoto,
         phone: targetUser.phone,
         address: targetUser.address,
         role: targetUser.role,
