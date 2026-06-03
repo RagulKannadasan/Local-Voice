@@ -20,7 +20,7 @@ export default function LandingPage() {
         </h1>
 
         <p className="mt-4 text-xl md:text-2xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto font-medium relative z-20">
-          {t("Connecting Kavarappattu. Your community, your voice, your platform.", "கவரப்பட்டுவை இணைக்கிறது. உங்கள் சமூகம், உங்கள் குரல், உங்கள் தளம்.")}
+          {t("Connecting Kavarappattu. Your community, your voice, your platform.", "காவராப்பட்டு மக்களை இணைக்கிறது. உங்கள் சமூகம், உங்கள் குரல், உங்கள் தளம்.")}
         </p>
 
         <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-8 relative z-20">
