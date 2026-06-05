@@ -4,10 +4,6 @@ const withSerwist = require("@serwist/next").default({
   disable: process.env.NODE_ENV === "development",
 });
 
-const nextConfig = {
-  experimental: {
-    viewTransition: true,
-  },
-};
+const nextConfig = {};
 
 module.exports = withSerwist(nextConfig);

@@ -1,11 +1,37 @@
 "use client";
 
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowRight, MessageSquareHeart, HandHeart, CheckCircle, Globe2 } from 'lucide-react';
+import { ArrowRight, MessageSquareHeart, HandHeart, CheckCircle, Globe2, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/lib/LanguageContext';
 
 export default function LandingPage() {
   const { t } = useLanguage();
+  const router = useRouter();
+  const [isChecking, setIsChecking] = useState(true);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('localVoice_profile');
+    if (saved) {
+      try {
+        const profile = JSON.parse(saved);
+        if (profile.isLoggedIn) {
+          router.replace('/feed');
+          return;
+        }
+      } catch (e) {}
+    }
+    setIsChecking(false);
+  }, [router]);
+
+  if (isChecking) {
+    return (
+      <div className="flex justify-center items-center min-h-[85vh]">
+        <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[85vh] py-12 px-4 sm:px-6 lg:px-8 space-y-16">

@@ -1,17 +1,15 @@
 "use client";
 
 import { useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { useTab } from '@/lib/TabContext';
 
 export default function SwipeHandler({ children }) {
-  const pathname = usePathname();
-  const router = useRouter();
+  const { isSpaMode, activeTab, switchTab, spaRoutes } = useTab();
   
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
 
   const minSwipeDistance = 50;
-  const tabOrder = ['/feed', '/announcements', '/complaints', '/profile'];
 
   const onTouchStart = (e) => {
     setTouchEnd(null);
@@ -23,7 +21,7 @@ export default function SwipeHandler({ children }) {
   };
 
   const onTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
+    if (!touchStart || !touchEnd || !isSpaMode) return;
     
     const distanceX = touchStart.x - touchEnd.x;
     const distanceY = Math.abs(touchStart.y - touchEnd.y);
@@ -41,17 +39,10 @@ export default function SwipeHandler({ children }) {
   const handleSwipe = (dir) => {
     if (typeof window === 'undefined' || window.innerWidth >= 768) return;
 
-    const currentIndex = tabOrder.findIndex(path => pathname?.startsWith(path) || pathname === path);
-    if (currentIndex === -1) return;
-
-    if (dir === 'Left' && currentIndex < tabOrder.length - 1) {
-      document.documentElement.classList.remove('slide-backward');
-      document.documentElement.classList.add('slide-forward');
-      router.push(tabOrder[currentIndex + 1]);
-    } else if (dir === 'Right' && currentIndex > 0) {
-      document.documentElement.classList.remove('slide-forward');
-      document.documentElement.classList.add('slide-backward');
-      router.push(tabOrder[currentIndex - 1]);
+    if (dir === 'Left' && activeTab < spaRoutes.length - 1) {
+      switchTab(activeTab + 1);
+    } else if (dir === 'Right' && activeTab > 0) {
+      switchTab(activeTab - 1);
     }
   };
 
