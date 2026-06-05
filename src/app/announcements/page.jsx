@@ -44,7 +44,14 @@ export default function AnnouncementsPage() {
 
   const fetchPolls = async () => {
     try {
-      const res = await fetch('/api/polls', { cache: 'no-store' });
+      let userEmail = '';
+      const saved = localStorage.getItem('localVoice_profile');
+      if (saved) {
+        const profile = JSON.parse(saved);
+        userEmail = profile.email;
+      }
+      
+      const res = await fetch(`/api/polls?requesterEmail=${userEmail}`, { cache: 'no-store' });
       const data = await res.json();
       if (res.ok) {
         setPolls(data.polls);
@@ -61,7 +68,7 @@ export default function AnnouncementsPage() {
     }
     
     const targetPoll = polls.find(p => p.id === pollId);
-    if (!targetPoll || targetPoll.votedUsers?.includes(currentUser.email)) {
+    if (!targetPoll || targetPoll.hasVoted) {
       return; // Already voted or invalid poll
     }
 
@@ -75,7 +82,7 @@ export default function AnnouncementsPage() {
           ...poll, 
           options: newOptions, 
           totalVotes: poll.totalVotes + 1,
-          votedUsers: [...(poll.votedUsers || []), currentUser.email]
+          hasVoted: true
         };
       }
       return poll;
@@ -201,7 +208,7 @@ export default function AnnouncementsPage() {
                 <p className="text-gray-500 dark:text-gray-400">{t('No active polls at this time.', 'தற்போது எந்த கருத்துக்கணிப்பும் இல்லை.')}</p>
               </div>
             ) : polls.map((poll) => {
-              const hasVoted = currentUser && poll.votedUsers?.includes(currentUser.email);
+              const hasVoted = poll.hasVoted;
               
               return (
                 <div key={poll.id} className="bg-white dark:bg-gray-900 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 transition-colors">
@@ -209,11 +216,20 @@ export default function AnnouncementsPage() {
                     <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 leading-snug">
                       {poll.question}
                     </h2>
-                    {!poll.isActive && (
-                      <span className="ml-3 text-[10px] font-bold px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full whitespace-nowrap">
-                        {t('Closed', 'முடிந்தது')}
-                      </span>
-                    )}
+                    <div className="flex flex-col items-end">
+                      {!poll.isActive ? (
+                        <span className="ml-3 text-[10px] font-bold px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full whitespace-nowrap">
+                          {t('Closed', 'முடிந்தது')}
+                        </span>
+                      ) : (
+                        poll.expiresAt && (
+                          <span className="ml-3 text-[10px] font-medium px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full whitespace-nowrap flex items-center">
+                            <Clock className="w-3 h-3 mr-1" />
+                            {Math.max(0, Math.floor((new Date(poll.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60)))}h left
+                          </span>
+                        )
+                      )}
+                    </div>
                   </div>
   
                   <div className="space-y-3">

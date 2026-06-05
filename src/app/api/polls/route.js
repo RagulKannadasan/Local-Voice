@@ -7,20 +7,53 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const requesterEmail = searchParams.get('requesterEmail');
+
     await connectToDatabase();
+    
+    // Check if the requester is a super admin
+    let isSuperAdmin = false;
+    if (requesterEmail) {
+      const user = await User.findOne({ email: requesterEmail });
+      if (user && user.role === 'super_admin') {
+        isSuperAdmin = true;
+      }
+    }
+
     // Fetch all active polls, sorted by newest first
     const polls = await Poll.find({ isActive: true }).sort({ createdAt: -1 });
     
+    const now = new Date();
+    
     // Transform to match the frontend expected structure (id vs _id)
-    const formattedPolls = polls.map(poll => ({
-      id: poll._id.toString(),
-      question: poll.question,
-      options: poll.options,
-      totalVotes: poll.totalVotes,
-      author: poll.author,
-      votedUsers: poll.votedUsers,
-      createdAt: poll.createdAt
-    }));
+    const formattedPolls = polls.map(poll => {
+      // Fallback for older polls without expiresAt (assume 24h from createdAt)
+      const expiresAt = poll.expiresAt || new Date(new Date(poll.createdAt).getTime() + 24 * 60 * 60 * 1000);
+      const isExpired = now > expiresAt;
+      
+      return {
+        id: poll._id.toString(),
+        question: poll.question,
+        options: poll.options.map(opt => ({
+          id: opt.id,
+          text: opt.text,
+          votes: opt.votes,
+          // Only send the voters array if the user is a super admin
+          voters: isSuperAdmin ? opt.voters : undefined
+        })),
+        totalVotes: poll.totalVotes,
+        author: poll.author,
+        // Only send the full votedUsers array to super admins. For regular users, we keep it completely secret.
+        votedUsers: isSuperAdmin ? poll.votedUsers : undefined,
+        // Calculate hasVoted on the backend to avoid exposing the votedUsers array to the frontend
+        hasVoted: requesterEmail ? poll.votedUsers.includes(requesterEmail) : false,
+        createdAt: poll.createdAt,
+        expiresAt: expiresAt,
+        // Override isActive to false if 24 hours have passed
+        isActive: poll.isActive && !isExpired
+      };
+    });
     
     return NextResponse.json({ success: true, polls: formattedPolls }, { status: 200 });
   } catch (error) {
@@ -51,7 +84,8 @@ export async function POST(request) {
       options: options.map(opt => ({
         id: opt.id,
         text: opt.text,
-        votes: 0
+        votes: 0,
+        voters: []
       })),
       totalVotes: 0,
       author: requester.name || requesterEmail,
@@ -91,7 +125,10 @@ export async function PUT(request) {
       return NextResponse.json({ success: false, error: 'Poll not found' }, { status: 404 });
     }
     
-    if (!poll.isActive) {
+    const expiresAt = poll.expiresAt || new Date(new Date(poll.createdAt).getTime() + 24 * 60 * 60 * 1000);
+    const isExpired = new Date() > expiresAt;
+
+    if (!poll.isActive || isExpired) {
       return NextResponse.json({ success: false, error: 'Poll is closed' }, { status: 400 });
     }
 
@@ -107,6 +144,8 @@ export async function PUT(request) {
     }
 
     option.votes += 1;
+    if (!option.voters) option.voters = [];
+    option.voters.push(userEmail);
     poll.totalVotes += 1;
     poll.votedUsers.push(userEmail);
 

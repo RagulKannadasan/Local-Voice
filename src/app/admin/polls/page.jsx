@@ -38,7 +38,13 @@ export default function AdminPolls() {
 
   const fetchPolls = async () => {
     try {
-      const res = await fetch('/api/polls');
+      let userEmail = '';
+      const saved = localStorage.getItem('localVoice_profile');
+      if (saved) {
+        const profile = JSON.parse(saved);
+        userEmail = profile.email;
+      }
+      const res = await fetch(`/api/polls?requesterEmail=${userEmail}`);
       const data = await res.json();
       if (res.ok) {
         setPolls(data.polls);
@@ -223,12 +229,22 @@ export default function AdminPolls() {
                         <span className="font-medium text-gray-700 dark:text-gray-300">{opt.text}</span>
                         <span className="text-gray-500 dark:text-gray-400">{percentage}% ({opt.votes})</span>
                       </div>
-                      <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2">
+                      <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2 mb-1">
                         <div 
                           className="bg-blue-500 h-2 rounded-full transition-all duration-500" 
                           style={{ width: `${percentage}%` }}
                         />
                       </div>
+                      {currentUser?.role === 'super_admin' && opt.voters && opt.voters.length > 0 && (
+                        <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 p-2 rounded-lg mt-2 border border-gray-100 dark:border-gray-800">
+                          <span className="font-medium text-gray-700 dark:text-gray-300">Voters:</span>
+                          <ul className="mt-1 space-y-0.5 max-h-32 overflow-y-auto">
+                            {opt.voters.map((voter, idx) => (
+                              <li key={idx} className="flex items-center before:content-['•'] before:mr-1.5 before:text-gray-400 truncate">{voter}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                     </div>
                   );
                 })}

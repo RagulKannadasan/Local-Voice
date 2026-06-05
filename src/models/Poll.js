@@ -4,6 +4,7 @@ const OptionSchema = new mongoose.Schema({
   id: { type: String, required: true }, // Using string ID for simpler frontend integration (e.g. "1", "2")
   text: { type: String, required: true },
   votes: { type: Number, default: 0 },
+  voters: [{ type: String }], // Array of user emails who voted for this option
 }, { _id: false });
 
 const PollSchema = new mongoose.Schema({
@@ -14,6 +15,10 @@ const PollSchema = new mongoose.Schema({
   isActive: { type: Boolean, default: true },
   votedUsers: [{ type: String }], // Array of user emails who have voted
   createdAt: { type: Date, default: Date.now },
+  expiresAt: {
+    type: Date,
+    default: () => new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from creation
+  },
 });
 
 export default mongoose.models.Poll || mongoose.model('Poll', PollSchema);
