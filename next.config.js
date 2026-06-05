@@ -4,9 +4,10 @@ const withSerwist = require("@serwist/next").default({
   disable: process.env.NODE_ENV === "development",
 });
 
-/** @type {import('next').NextConfig} */
 const nextConfig = {
-  // swcMinify removed since it's unrecognized in Next.js 15+
+  experimental: {
+    viewTransition: true,
+  },
 };
 
 module.exports = withSerwist(nextConfig);

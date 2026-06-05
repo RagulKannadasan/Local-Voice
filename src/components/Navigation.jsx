@@ -34,6 +34,27 @@ export default function Navigation() {
 
   const mobileLinks = allLinks.filter(l => !l.desktopOnly);
 
+  const handleTransition = (targetPath) => {
+    if (typeof window === 'undefined' || window.innerWidth >= 768) {
+      document.documentElement.classList.remove('slide-forward', 'slide-backward');
+      return;
+    }
+    
+    const tabOrder = ['/feed', '/announcements', '/post/new', '/complaints', '/profile'];
+    const currentIndex = tabOrder.findIndex(path => pathname.startsWith(path) || pathname === path);
+    const targetIndex = tabOrder.findIndex(path => targetPath.startsWith(path) || targetPath === path);
+    
+    document.documentElement.classList.remove('slide-forward', 'slide-backward');
+    
+    if (currentIndex !== -1 && targetIndex !== -1 && currentIndex !== targetIndex) {
+      if (targetIndex > currentIndex) {
+        document.documentElement.classList.add('slide-forward');
+      } else {
+        document.documentElement.classList.add('slide-backward');
+      }
+    }
+  };
+
   return (
     <>
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 flex justify-around items-center h-16 z-50 pb-safe">
@@ -41,7 +62,7 @@ export default function Navigation() {
           const Icon = link.icon;
           const isActive = pathname === link.href || (pathname.startsWith(link.href) && link.href !== '/');
           return (
-            <Link key={link.name} href={link.href} className="flex flex-col items-center justify-center w-full h-full">
+            <Link key={link.name} href={link.href} onClick={() => handleTransition(link.href)} className="flex flex-col items-center justify-center w-full h-full">
               <Icon className={clsx("w-6 h-6", isActive ? "text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400")} />
               <span className={clsx("text-[10px] mt-1 font-medium", isActive ? "text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400")}>
                 {t(link.name, link.ta)}
@@ -51,7 +72,7 @@ export default function Navigation() {
         })}
 
         {/* Center Floating Action Button */}
-        <Link href="/post/new" className="flex flex-col items-center justify-center px-2">
+        <Link href="/post/new" onClick={() => handleTransition('/post/new')} className="flex flex-col items-center justify-center px-2">
           <div className="bg-blue-600 text-white p-3 rounded-full shadow-lg shadow-blue-500/30 transform -translate-y-4 border-4 border-white dark:border-gray-900 transition-transform active:scale-95">
             <Plus className="w-6 h-6" />
           </div>
@@ -61,7 +82,7 @@ export default function Navigation() {
           const Icon = link.icon;
           const isActive = pathname === link.href || (pathname.startsWith(link.href) && link.href !== '/');
           return (
-            <Link key={link.name} href={link.href} className="flex flex-col items-center justify-center w-full h-full">
+            <Link key={link.name} href={link.href} onClick={() => handleTransition(link.href)} className="flex flex-col items-center justify-center w-full h-full">
               <Icon className={clsx("w-6 h-6", isActive ? "text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400")} />
               <span className={clsx("text-[10px] mt-1 font-medium", isActive ? "text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400")}>
                 {t(link.name, link.ta)}
