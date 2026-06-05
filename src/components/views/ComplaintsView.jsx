@@ -166,7 +166,7 @@ export default function ComplaintsPage() {
       {showForm && (
         <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-900 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 space-y-4 animate-in fade-in slide-in-from-top-4 transition-colors">
           <div className="grid grid-cols-2 gap-3">
-            {['Roads', 'Water', 'Electricity', 'Sanitation'].map(cat => (
+            {['Roads', 'Water', 'Electricity', 'Sanitation', 'Others'].map(cat => (
               <button
                 key={cat}
                 type="button"
