@@ -61,3 +61,39 @@ export async function PUT(request) {
     return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 });
   }
 }
+
+export async function GET(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const email = searchParams.get('email');
+    if (!email) {
+      return NextResponse.json({ success: false, error: 'Email is required' }, { status: 400 });
+    }
+
+    await connectToDatabase();
+    const targetUser = await User.findOne({ email });
+    
+    if (!targetUser) {
+      return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      user: {
+        id: targetUser._id,
+        email: targetUser.email,
+        name: targetUser.name,
+        username: targetUser.username,
+        profilePhoto: targetUser.profilePhoto,
+        phone: targetUser.phone,
+        address: targetUser.address,
+        role: targetUser.role,
+        permissions: targetUser.permissions,
+      }
+    }, { status: 200 });
+
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+    return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 });
+  }
+}

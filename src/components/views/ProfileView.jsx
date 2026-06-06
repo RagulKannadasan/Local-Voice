@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { User, Mail, Phone, MapPin, Edit3, LogOut, FileText, Settings, Loader2, Camera } from 'lucide-react';
 import clsx from 'clsx';
 import { useLanguage } from '@/lib/LanguageContext';
+import { useTab } from '@/lib/TabContext';
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState({
@@ -19,6 +20,7 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { t } = useLanguage();
+  const { activeTab } = useTab();
 
   // Login States
   const [loginStep, setLoginStep] = useState('EMAIL'); // 'EMAIL' or 'OTP'
@@ -37,6 +39,28 @@ export default function ProfilePage() {
       setProfile(JSON.parse(saved));
     }
   }, []);
+
+  // Sync profile data with backend whenever the Profile tab becomes active
+  useEffect(() => {
+    if (activeTab === 3) {
+      const saved = localStorage.getItem('localVoice_profile');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.email && parsed.isLoggedIn) {
+          fetch(`/api/profile?email=${encodeURIComponent(parsed.email)}`)
+            .then(res => res.json())
+            .then(data => {
+              if (data.success && data.user) {
+                const updatedProfile = { ...parsed, ...data.user };
+                setProfile(updatedProfile);
+                localStorage.setItem('localVoice_profile', JSON.stringify(updatedProfile));
+              }
+            })
+            .catch(err => console.error('Failed to sync profile:', err));
+        }
+      }
+    }
+  }, [activeTab]);
 
   const saveProfile = (data) => {
     setProfile(data);
