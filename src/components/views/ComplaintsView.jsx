@@ -124,18 +124,6 @@ export default function ComplaintsPage() {
         setImageFile(null);
         setImageString(null);
 
-        // Trigger NodeMailer API in background
-        fetch('/api/email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: 'NEW_COMPLAINT',
-            category,
-            area,
-            description,
-            userEmail: email
-          })
-        });
       }
     } catch (error) {
       alert("Failed to submit complaint: " + error.message);

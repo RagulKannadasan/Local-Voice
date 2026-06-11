@@ -20,6 +20,7 @@ const ComplaintSchema = new mongoose.Schema({
     default: 'Pending'
   },
   imageUrl: { type: String, default: null }, // Compressed Base64 string
+  emailSent: { type: Boolean, default: false }, // Tracks if the 30min delayed email has been sent
   timeline: [TimelineEventSchema],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
