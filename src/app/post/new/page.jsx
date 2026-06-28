@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Camera, Loader2, Send } from 'lucide-react';
+import { Camera, Loader2, Send, X, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/lib/LanguageContext';
+import Link from 'next/link';
 
 export default function CreatePostPage() {
   const [newPostContent, setNewPostContent] = useState('');
@@ -31,8 +32,8 @@ export default function CreatePostPage() {
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 600;
-        const MAX_HEIGHT = 600;
+        const MAX_WIDTH = 800;
+        const MAX_HEIGHT = 800;
         let width = img.width;
         let height = img.height;
 
@@ -54,7 +55,7 @@ export default function CreatePostPage() {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
 
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
         setImageString(dataUrl);
       };
       img.src = event.target.result;
@@ -92,56 +93,82 @@ export default function CreatePostPage() {
   if (!currentUser) return null;
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 transition-colors">
-        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">{t('Create Post', 'புதிய பதிவு')}</h1>
-        {!currentUser.username && (
-          <div className="mb-4 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 p-3 rounded-xl border border-amber-200 dark:border-amber-800/30 text-sm flex items-start space-x-2">
-            <span className="font-bold">⚠️</span>
-            <span>{t('You must set a unique username in your Profile before you can post.', 'நீங்கள் பதிவிடுவதற்கு முன் உங்கள் சுயவிவரத்தில் தனித்துவமான பயனர்பெயரை (Username) அமைக்க வேண்டும்.')}</span>
+    <div className="bg-white dark:bg-[#0a0a0a] min-h-[calc(100vh-4rem)] flex flex-col">
+      {/* Top Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800/60 sticky top-0 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-md z-10">
+        <div className="flex items-center space-x-4">
+          <Link href="/feed" className="p-2 -ml-2 text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors rounded-full hover:bg-gray-50 dark:hover:bg-gray-800">
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <span className="font-bold text-lg text-gray-900 dark:text-white">{t('New Post', 'புதிய பதிவு')}</span>
+        </div>
+        <button
+          onClick={handlePostSubmit}
+          disabled={isSubmitting || !newPostContent.trim() || !currentUser.username}
+          className="bg-blue-600 dark:bg-sky-500 text-white px-5 py-1.5 rounded-full text-sm font-bold hover:bg-blue-700 dark:hover:bg-sky-600 transition-colors disabled:opacity-50 flex items-center space-x-2 shadow-sm shadow-blue-500/20"
+        >
+          {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+          <span>{t("Post", "பதிவிடு")}</span>
+        </button>
+      </div>
+
+      {!currentUser.username && (
+        <div className="mx-4 mt-4 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 p-3 rounded-xl border border-amber-200 dark:border-amber-800/30 text-sm flex items-start space-x-3">
+          <span className="font-bold text-lg leading-none">!</span>
+          <span>{t('You must set a unique username in your Profile before you can post.', 'நீங்கள் பதிவிடுவதற்கு முன் உங்கள் சுயவிவரத்தில் தனித்துவமான பயனர்பெயரை அமைக்க வேண்டும்.')}</span>
+        </div>
+      )}
+
+      {/* Composer Area */}
+      <div className="flex flex-1 p-4 space-x-3">
+        {/* Avatar */}
+        <div className="flex-shrink-0">
+          <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-sky-900/20 text-blue-800 dark:text-sky-500 flex items-center justify-center font-bold text-lg uppercase border border-blue-200 dark:border-sky-900/30 overflow-hidden">
+            {currentUser.profilePhoto ? (
+              <img src={currentUser.profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              currentUser.name.charAt(0)
+            )}
           </div>
-        )}
-        <form onSubmit={handlePostSubmit} className="flex flex-col space-y-3">
+        </div>
+
+        {/* Input & Attachments */}
+        <div className="flex-1 flex flex-col pt-2 min-w-0">
           <textarea
-            className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900 resize-none transition-colors"
+            className="w-full bg-transparent text-gray-900 dark:text-white text-lg sm:text-xl placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none resize-none leading-relaxed"
             placeholder={t("What's happening in Kavarappattu?", "நமது ஊரில் என்ன நடக்கிறது?")}
-            rows={5}
+            rows={newPostContent ? Math.max(5, newPostContent.split('\n').length + 1) : 5}
             value={newPostContent}
             onChange={(e) => setNewPostContent(e.target.value)}
+            autoFocus
           />
 
           {imageString && (
-            <div className="relative w-32 h-32 rounded-lg overflow-hidden border border-gray-300 mt-2">
+            <div className="relative w-full max-w-sm rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-800 mt-4 bg-gray-50 dark:bg-gray-900">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={imageString} alt="Preview" className="w-full h-full object-cover" />
+              <img src={imageString} alt="Attached media" className="w-full h-auto object-cover max-h-[400px]" />
               <button
                 type="button"
                 onClick={() => setImageString(null)}
-                className="absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold"
+                className="absolute top-2 right-2 bg-gray-900/70 backdrop-blur-sm text-white p-2 rounded-full hover:bg-gray-900 transition-colors"
+                title="Remove image"
               >
-                &times;
+                <X className="w-4 h-4" />
               </button>
             </div>
           )}
+        </div>
+      </div>
 
-          <div className="flex justify-between items-center pt-2">
-            <label className="flex items-center space-x-2 text-gray-500 hover:text-blue-600 cursor-pointer p-2 rounded-full hover:bg-blue-50 transition-colors">
-              <Camera className="w-5 h-5" />
-              <span className="text-sm font-medium">{t('Add Photo', 'புகைப்படம் சேர்')}</span>
-              <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-            </label>
-
-            <button
-              type="submit"
-              disabled={isSubmitting || !newPostContent.trim() || !currentUser.username}
-              className="bg-blue-600 text-white px-6 py-2.5 rounded-full text-sm font-medium flex items-center space-x-2 hover:bg-blue-700 transition-colors disabled:opacity-50"
-              title={!currentUser.username ? "Set a username in your profile to post" : ""}
-            >
-              <span>{isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : t("Post", "பதிவிடு")}</span>
-              {!isSubmitting && <Send className="w-4 h-4" />}
-            </button>
-          </div>
-        </form>
+      {/* Bottom Toolbar */}
+      <div className="mt-auto border-t border-gray-100 dark:border-gray-800/60 p-3 bg-white dark:bg-[#0a0a0a] flex items-center z-10 sticky bottom-0">
+        <label className="flex items-center justify-center w-10 h-10 rounded-full text-blue-600 dark:text-sky-500 hover:bg-blue-50 dark:hover:bg-sky-900/20 cursor-pointer transition-colors group">
+          <Camera className="w-5 h-5 group-active:scale-90 transition-transform" />
+          <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+        </label>
+        <span className="text-sm font-medium text-blue-600 dark:text-sky-500 ml-2 hidden sm:block">
+          {t('Add media', 'புகைப்படம் சேர்')}
+        </span>
       </div>
     </div>
   );

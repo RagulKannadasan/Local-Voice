@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, FileText, User, Moon, Sun, Languages, Megaphone, Plus, Bell } from 'lucide-react';
+import { Home, FileText, User, Moon, Sun, Languages, Megaphone, Plus, Bell, Search } from 'lucide-react';
 import clsx from 'clsx';
 import { useTheme } from 'next-themes';
 import { useLanguage } from '@/lib/LanguageContext';
@@ -56,14 +56,14 @@ export default function Navigation() {
 
   return (
     <>
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 flex justify-around items-center h-16 z-50 pb-safe">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-[#0a0a0a] flex justify-around items-center h-16 z-50 pb-safe">
         {mobileLinks.slice(0, 2).map((link) => {
           const Icon = link.icon;
           const isActive = checkIsActive(link.href);
           return (
             <Link key={link.name} href={link.href} onClick={(e) => handleLinkClick(e, link.href)} className="flex flex-col items-center justify-center w-full h-full">
-              <Icon className={clsx("w-6 h-6", isActive ? "text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400")} />
-              <span className={clsx("text-[10px] mt-1 font-medium", isActive ? "text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400")}>
+              <Icon className={clsx("w-6 h-6", isActive ? "text-blue-800 dark:text-sky-500" : "text-gray-500 dark:text-gray-400")} />
+              <span className={clsx("text-[10px] mt-1 font-medium", isActive ? "text-blue-800 dark:text-sky-500" : "text-gray-500 dark:text-gray-400")}>
                 {t(link.name, link.ta)}
               </span>
             </Link>
@@ -71,9 +71,9 @@ export default function Navigation() {
         })}
 
         {/* Center Floating Action Button */}
-        <Link href="/post/new" className="flex flex-col items-center justify-center px-2">
-          <div className="bg-blue-600 text-white p-3 rounded-full shadow-lg shadow-blue-500/30 transform -translate-y-4 border-4 border-white dark:border-gray-900 transition-transform active:scale-95">
-            <Plus className="w-6 h-6" />
+        <Link href="/post/new" className="flex flex-col items-center justify-center px-2 -mt-5 relative z-10">
+          <div className="bg-blue-600 dark:bg-sky-500 text-white p-3 rounded-full shadow-lg shadow-blue-500/30 dark:shadow-sky-500/20 transition-transform active:scale-95 border-4 border-white dark:border-[#0a0a0a]">
+            <Plus className="w-6 h-6 stroke-[2.5px]" />
           </div>
         </Link>
 
@@ -82,8 +82,8 @@ export default function Navigation() {
           const isActive = checkIsActive(link.href);
           return (
             <Link key={link.name} href={link.href} onClick={(e) => handleLinkClick(e, link.href)} className="flex flex-col items-center justify-center w-full h-full">
-              <Icon className={clsx("w-6 h-6", isActive ? "text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400")} />
-              <span className={clsx("text-[10px] mt-1 font-medium", isActive ? "text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400")}>
+              <Icon className={clsx("w-6 h-6", isActive ? "text-blue-800 dark:text-sky-500" : "text-gray-500 dark:text-gray-400")} />
+              <span className={clsx("text-[10px] mt-1 font-medium", isActive ? "text-blue-800 dark:text-sky-500" : "text-gray-500 dark:text-gray-400")}>
                 {t(link.name, link.ta)}
               </span>
             </Link>
@@ -91,9 +91,9 @@ export default function Navigation() {
         })}
       </nav>
 
-      <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 h-screen fixed top-0 left-0">
+      <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-[#0a0a0a] border-r border-gray-200 dark:border-gray-800 h-screen fixed top-0 left-0">
         <div className="p-6">
-          <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-400">Local Voice</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Local Voice</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">Kavarappattu</p>
         </div>
         <nav className="flex-1 px-4 space-y-2">
@@ -107,7 +107,7 @@ export default function Navigation() {
                 onClick={(e) => handleLinkClick(e, link.href)}
                 className={clsx(
                   "flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors",
-                  isActive ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                  isActive ? "bg-blue-50 dark:bg-sky-900/20 text-blue-800 dark:text-sky-500" : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900"
                 )}
               >
                 <Icon className="w-5 h-5" />
@@ -120,15 +120,14 @@ export default function Navigation() {
         <div className="p-4 border-t border-gray-200 dark:border-gray-800 space-y-2">
           <button
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="flex items-center space-x-3 px-4 py-3 w-full rounded-xl transition-colors text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+            className="flex items-center space-x-3 px-4 py-3 w-full rounded-xl transition-colors text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900"
           >
             {mounted && theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             <span className="font-medium">{mounted && theme === 'dark' ? t('Light Mode', 'வெளிச்சம்') : t('Dark Mode', 'இருட்டு')}</span>
           </button>
-
           <button
             onClick={toggleLanguage}
-            className="flex items-center space-x-3 px-4 py-3 w-full rounded-xl transition-colors text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+            className="flex items-center space-x-3 px-4 py-3 w-full rounded-xl transition-colors text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900"
           >
             <Languages className="w-5 h-5" />
             <span className="font-medium">{language === 'en' ? 'தமிழ்' : 'English'}</span>
@@ -136,21 +135,22 @@ export default function Navigation() {
         </div>
       </aside>
 
-      {/* Mobile Top Settings Bar (Only visible on mobile to toggle theme/lang since sidebar is hidden) */}
-      <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center px-4 z-40">
-        <h1 className="text-lg font-bold text-blue-600 dark:text-blue-400">Local Voice</h1>
-        <div className="flex items-center space-x-2">
-          <Link href="/notifications" className="p-2 text-gray-600 dark:text-gray-300 relative">
-            <Bell className="w-5 h-5" />
-            {/* Notification Badge Example: */}
-            {/* <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full"></span> */}
+      {/* Mobile Top Settings Bar */}
+      <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white dark:bg-[#0a0a0a] border-b border-gray-100 dark:border-gray-800 flex justify-between items-center px-5 z-40">
+        <div className="flex items-center space-x-2.5">
+          <div className="w-2 h-2 bg-blue-500 rounded-full mt-0.5"></div>
+          <div className="flex flex-col">
+            <h1 className="text-lg font-bold text-gray-900 dark:text-white leading-none">Local Voice</h1>
+            <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400 mt-0.5">Kavarappattu</span>
+          </div>
+        </div>
+        <div className="flex items-center space-x-3">
+          <Link href="/search" className="p-2 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-800 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+            <Search className="w-5 h-5" />
           </Link>
-          <button onClick={toggleLanguage} className="p-2 text-gray-600 dark:text-gray-300">
-            <span className="font-bold text-sm">{language === 'en' ? 'த' : 'En'}</span>
-          </button>
-          <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="p-2 text-gray-600 dark:text-gray-300">
-            {mounted && theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </button>
+          <Link href="/notifications" className="p-2 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-800 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors relative">
+            <Bell className="w-5 h-5" />
+          </Link>
         </div>
       </div>
       {/* Spacer for mobile top bar */}

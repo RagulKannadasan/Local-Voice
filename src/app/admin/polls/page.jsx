@@ -139,7 +139,7 @@ export default function AdminPolls() {
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Create community polls to gather public opinion.</p>
       </div>
 
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
+      <div className="bg-white dark:bg-[#0a0a0a] rounded-2xl p-6 border border-gray-200 dark:border-gray-800 transition-colors">
         <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">New Poll</h2>
         <form onSubmit={handleCreate} className="space-y-4">
           <div>
@@ -149,7 +149,7 @@ export default function AdminPolls() {
               required
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+              className="w-full bg-transparent border border-gray-200 dark:border-gray-800 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
               placeholder="e.g., What should we name the new park?"
             />
           </div>
@@ -164,7 +164,7 @@ export default function AdminPolls() {
                     required={index < 2} // First two are required
                     value={opt.text}
                     onChange={(e) => handleOptionChange(opt.id, e.target.value)}
-                    className="flex-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                    className="flex-1 bg-transparent border border-gray-200 dark:border-gray-800 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                     placeholder={`Option ${index + 1}`}
                   />
                   {options.length > 2 && (
@@ -195,7 +195,7 @@ export default function AdminPolls() {
             <button 
               type="submit" 
               disabled={isSubmitting}
-              className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-medium flex items-center justify-center hover:bg-blue-700 transition-colors disabled:opacity-70"
+              className="bg-blue-600 dark:bg-sky-500 text-white px-6 py-2.5 rounded-xl font-medium flex items-center justify-center hover:bg-blue-700 dark:hover:bg-sky-600 transition-colors disabled:opacity-70"
             >
               {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><PlayCircle className="w-5 h-5 mr-2" /> Publish Poll</>}
             </button>
@@ -213,7 +213,7 @@ export default function AdminPolls() {
           <p className="text-gray-500 dark:text-gray-400 text-sm">No active polls found.</p>
         ) : (
           polls.map((poll) => (
-            <div key={poll.id || poll._id} className="p-5 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl">
+            <div key={poll.id || poll._id} className="p-5 bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 rounded-xl transition-colors">
               <div className="flex justify-between items-start mb-4">
                 <h3 className="font-bold text-gray-900 dark:text-gray-100 text-lg">{poll.question}</h3>
                 <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
@@ -229,14 +229,14 @@ export default function AdminPolls() {
                         <span className="font-medium text-gray-700 dark:text-gray-300">{opt.text}</span>
                         <span className="text-gray-500 dark:text-gray-400">{percentage}% ({opt.votes})</span>
                       </div>
-                      <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2 mb-1">
+                      <div className="w-full bg-gray-100 dark:bg-gray-800/50 rounded-full h-2 mb-1">
                         <div 
                           className="bg-blue-500 h-2 rounded-full transition-all duration-500" 
                           style={{ width: `${percentage}%` }}
                         />
                       </div>
                       {currentUser?.role === 'super_admin' && opt.voters && opt.voters.length > 0 && (
-                        <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 p-2 rounded-lg mt-2 border border-gray-100 dark:border-gray-800">
+                        <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/50 p-2 rounded-lg mt-2 border border-gray-200 dark:border-gray-800">
                           <span className="font-medium text-gray-700 dark:text-gray-300">Voters:</span>
                           <ul className="mt-1 space-y-0.5 max-h-32 overflow-y-auto">
                             {opt.voters.map((voter, idx) => (

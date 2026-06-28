@@ -27,7 +27,7 @@ import SpaContainer from "@/components/SpaContainer";
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="font-sans bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300 overflow-x-hidden">
+      <body className="font-sans bg-gray-50 dark:bg-[#0a0a0a] text-gray-900 dark:text-white transition-colors duration-300 overflow-x-hidden">
         <Providers>
           <Navigation />
           <SwipeHandler>

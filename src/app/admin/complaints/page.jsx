@@ -162,11 +162,11 @@ export default function AdminComplaints() {
         {complaints.length === 0 ? (
           <p className="text-center text-gray-500 py-8 text-sm">No complaints found in the system.</p>
         ) : complaints.map((c) => (
-          <div key={c._id} className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm transition-colors">
+          <div key={c._id} className="bg-white dark:bg-[#0a0a0a] rounded-2xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm transition-colors">
             <div className="flex flex-col md:flex-row md:justify-between md:items-start mb-4 gap-4">
               <div>
                 <div className="flex items-center space-x-2 mb-2">
-                  <span className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs px-2.5 py-1 rounded-md font-semibold">
+                  <span className="bg-blue-50 dark:bg-sky-900/20 text-blue-800 dark:text-sky-500 text-xs px-2.5 py-1 rounded-md font-semibold border border-blue-200 dark:border-sky-900/30">
                     {c.category}
                   </span>
                   <span className={clsx(
@@ -227,7 +227,7 @@ export default function AdminComplaints() {
               </div>
             </div>
 
-            <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700/50 mb-4">
+            <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-200 dark:border-gray-800 mb-4">
               <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">{c.description}</p>
               
               {c.imageUrl && (
@@ -265,12 +265,12 @@ export default function AdminComplaints() {
                   value={timelineInputs[c._id] || ''}
                   onChange={(e) => setTimelineInputs({ ...timelineInputs, [c._id]: e.target.value })}
                   placeholder="Add a timeline update (e.g., Plumber dispatched)"
-                  className="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-colors"
+                  className="flex-1 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-colors"
                 />
                 <button 
                   onClick={() => handleAddTimeline(c._id)}
                   disabled={updatingId === c._id || !timelineInputs[c._id]}
-                  className="bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 dark:hover:bg-white transition-colors disabled:opacity-50"
+                  className="bg-blue-600 dark:bg-sky-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 dark:hover:bg-sky-600 transition-colors disabled:opacity-50"
                 >
                   {updatingId === c._id ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Log'}
                 </button>

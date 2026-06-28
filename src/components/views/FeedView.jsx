@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Heart, MessageCircle, Share2, Send, Camera, Loader2, ArrowRight, Trash2 } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Send, Camera, Loader2, ArrowRight, Trash2, MoreHorizontal, Megaphone } from 'lucide-react';
 import clsx from 'clsx';
 import { useLanguage } from '@/lib/LanguageContext';
 
@@ -213,59 +213,59 @@ export default function FeedPage() {
   };
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>;
+    return <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-blue-800 dark:text-sky-500" /></div>;
   }
 
   return (
     <div className="space-y-6 pb-20">
       {currentUser ? (
-        <div className="hidden md:block bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 transition-colors">
-          <form onSubmit={handlePostSubmit} className="flex flex-col space-y-3">
-            <textarea
-              className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900 resize-none transition-colors"
-              placeholder={t("What's happening in Kavarappattu?", "நமது ஊரில் என்ன நடக்கிறது?")}
-              rows={3}
-              value={newPostContent}
-              onChange={(e) => setNewPostContent(e.target.value)}
-            />
-
-            {imageString && (
-              <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-gray-300 mt-2">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={imageString} alt="Preview" className="w-full h-full object-cover" />
-                <button
-                  type="button"
-                  onClick={() => setImageString(null)}
-                  className="absolute top-1 right-1 bg-red-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs"
-                >
-                  &times;
-                </button>
-              </div>
-            )}
-
-            <div className="flex justify-between items-center">
-              <label className="flex items-center text-gray-500 hover:text-blue-600 cursor-pointer p-2 rounded-full hover:bg-blue-50 transition-colors">
+        <div className="bg-white dark:bg-[#0a0a0a] transition-colors rounded-2xl">
+          <form onSubmit={handlePostSubmit} className="border border-gray-200 dark:border-gray-800 p-3 rounded-2xl flex items-start space-x-3">
+            <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-sky-900/20 text-blue-800 dark:text-sky-500 flex-shrink-0 flex items-center justify-center font-bold uppercase border border-blue-200 dark:border-sky-900/30">
+              {currentUser.name.charAt(0)}
+            </div>
+            <div className="flex-1 flex flex-col justify-center min-h-[40px]">
+              <textarea
+                className="w-full bg-transparent text-gray-900 dark:text-gray-100 text-sm focus:outline-none resize-none placeholder-gray-400 dark:placeholder-gray-600 self-center leading-tight mt-1"
+                placeholder={t("Kavarappattu-la enna nadakkirathu?", "கவரப்பட்டு-ல என்ன நடக்கிறது?")}
+                rows={newPostContent ? 3 : 1}
+                value={newPostContent}
+                onChange={(e) => setNewPostContent(e.target.value)}
+              />
+              
+              {imageString && (
+                <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800 mt-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={imageString} alt="Preview" className="w-full h-full object-cover" />
+                  <button type="button" onClick={() => setImageString(null)} className="absolute top-1 right-1 bg-red-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs">&times;</button>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center space-x-1">
+              <label className="text-gray-500 hover:text-blue-800 dark:hover:text-sky-500 cursor-pointer p-2 rounded-full transition-colors hidden md:block">
                 <Camera className="w-5 h-5" />
                 <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
               </label>
-
               <button
                 type="submit"
                 disabled={isSubmitting || !newPostContent.trim() || !currentUser.username}
-                className="bg-blue-600 text-white px-5 py-2 rounded-full text-sm font-medium flex items-center space-x-2 hover:bg-blue-700 transition-colors disabled:opacity-70"
+                className="bg-transparent border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
                 title={!currentUser.username ? "Set a username in your profile to post" : ""}
               >
-                <span>{isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : t("Post", "பதிவிடு")}</span>
-                {!isSubmitting && <Send className="w-4 h-4" />}
+                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Post"}
               </button>
             </div>
           </form>
         </div>
       ) : (
-        <div className="hidden md:block bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 text-center">
-          <p className="text-gray-500">Log in from the Profile tab to post in the community feed.</p>
+        <div className="bg-white dark:bg-[#0a0a0a] p-4 rounded-2xl border border-gray-200 dark:border-gray-800 text-center">
+          <p className="text-gray-500 text-sm">Log in from the Profile tab to post.</p>
         </div>
       )}
+
+      <div className="pt-2">
+        <h2 className="text-[10px] font-bold text-gray-600 tracking-widest uppercase ml-1">Today</h2>
+      </div>
 
       <div className="space-y-4">
         {posts.map((post) => {
@@ -274,68 +274,87 @@ export default function FeedPage() {
           const commentCount = post.comments && Array.isArray(post.comments) ? post.comments.length : (post.comments || 0);
 
           return (
-            <article key={post._id} className="bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 transition-colors">
+            <article key={post._id} className="bg-white dark:bg-[#0a0a0a] p-4 rounded-2xl border border-gray-200 dark:border-gray-800 transition-colors">
               <div className="flex items-center space-x-3 mb-3">
-                <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex-shrink-0 flex items-center justify-center font-bold uppercase overflow-hidden">
+                <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-sky-900/20 text-blue-800 dark:text-sky-500 flex-shrink-0 flex items-center justify-center font-bold uppercase border border-blue-200 dark:border-sky-900/30">
                   {post.authorName.charAt(0)}
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center space-x-2">
+                  <h3 className="font-semibold text-gray-900 dark:text-white flex items-center space-x-2">
                     <span>{post.authorName}</span>
-                    {post.authorUsername && <span className="text-xs font-normal text-blue-500">@{post.authorUsername}</span>}
                   </h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {new Date(post.createdAt).toLocaleDateString()} {t("at", "அன்று")} {new Date(post.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </p>
+                  <div className="flex items-center space-x-2 mt-0.5">
+                    {post.authorUsername && <span className="text-[11px] text-gray-500">@{post.authorUsername}</span>}
+                    <span className="text-[10px] text-gray-600">•</span>
+                    <span className="text-[11px] text-gray-500">
+                      {new Date(post.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} - {new Date(post.createdAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                    </span>
+                  </div>
                 </div>
-                {currentUser?.role === 'super_admin' && (
-                  <button 
-                    onClick={() => handleDeletePost(post._id)}
-                    className="text-gray-400 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20"
-                    title="Delete Post"
-                  >
-                    <Trash2 className="w-4 h-4" />
+                <div className="flex items-center space-x-2">
+                  {currentUser?.role === 'super_admin' && (
+                    <button 
+                      onClick={() => handleDeletePost(post._id)}
+                      className="text-gray-500 hover:text-red-500 transition-colors p-2 rounded-xl border border-gray-200 dark:border-gray-800 hover:bg-red-50 dark:hover:bg-red-900/20"
+                      title="Delete Post"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                  <button className="text-gray-500 hover:text-gray-300 p-1.5 rounded-xl border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                    <MoreHorizontal className="w-4 h-4" />
                   </button>
-                )}
+                </div>
               </div>
 
-              <p className="text-gray-800 dark:text-gray-200 text-sm mb-3 leading-relaxed whitespace-pre-wrap">
+              <div className="mb-3 inline-flex items-center space-x-1.5 bg-gray-100 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 text-[10px] px-2 py-1 rounded-full">
+                <Megaphone className="w-3 h-3" />
+                <span>அறிவிப்பு</span>
+              </div>
+
+              <p className="text-gray-700 dark:text-gray-300 text-sm mb-4 leading-relaxed whitespace-pre-wrap">
                 {post.content}
               </p>
 
               {post.imageUrl && (
-                <div className="mb-4 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800 max-h-[500px] bg-gray-50 dark:bg-gray-800/50 flex items-center justify-center">
+                <div className="mb-4 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800 max-h-[500px] bg-gray-50 dark:bg-gray-900/50 flex items-center justify-center">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={post.imageUrl} alt="Post Attachment" className="max-w-full max-h-[500px] object-contain rounded-xl" />
                 </div>
               )}
 
-              <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 pt-3 transition-colors">
+              <div className="flex flex-wrap gap-2 mb-4">
+                <span className="text-blue-800 dark:text-sky-500 border border-blue-200 dark:border-sky-900/50 px-3 py-1 rounded-full text-[11px]">பசுமை</span>
+                <span className="text-blue-800 dark:text-sky-500 border border-blue-200 dark:border-sky-900/50 px-3 py-1 rounded-full text-[11px]">சுற்றுச்சூழல்</span>
+                <span className="text-blue-800 dark:text-sky-500 border border-blue-200 dark:border-sky-900/50 px-3 py-1 rounded-full text-[11px]">பொதுமக்கள்</span>
+              </div>
+
+              <div className="flex items-center space-x-3 pt-2 transition-colors">
                 <button
                   onClick={() => handleLike(post._id)}
                   className={clsx(
-                    "flex items-center space-x-2 text-sm font-medium transition-colors",
-                    isLikedByMe ? "text-red-500" : "text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400"
+                    "flex-1 flex justify-center items-center space-x-2 text-sm font-medium transition-colors border rounded-xl py-2",
+                    isLikedByMe ? "border-red-900/50 text-red-500 bg-red-900/10" : "border-gray-200 dark:border-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
                   )}
                 >
-                  <Heart className={clsx("w-5 h-5", isLikedByMe && "fill-current")} />
-                  <span>{post.likes.length} {t("Like", "லைக்")}</span>
+                  <Heart className={clsx("w-4 h-4", isLikedByMe && "fill-current")} />
+                  <span className="text-xs">{post.likes.length}</span>
                 </button>
 
                 <button
                   onClick={() => toggleComments(post._id)}
-                  className="flex items-center space-x-2 text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 text-sm font-medium transition-colors"
+                  className="flex-1 flex justify-center items-center space-x-2 text-sm font-medium transition-colors border border-gray-200 dark:border-gray-800 rounded-xl py-2 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
                 >
-                  <MessageCircle className="w-5 h-5" />
-                  <span>{commentCount} {t("Comment", "கமெண்ட்")}</span>
+                  <MessageCircle className="w-4 h-4" />
+                  <span className="text-xs">{commentCount}</span>
                 </button>
 
                 <button
                   onClick={() => handleShare(post)}
-                  className="flex items-center space-x-2 text-gray-500 dark:text-gray-400 hover:text-green-500 dark:hover:text-green-400 text-sm font-medium transition-colors"
+                  className="flex-1 flex justify-center items-center space-x-2 text-sm font-medium transition-colors border border-gray-200 dark:border-gray-800 rounded-xl py-2 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
                 >
-                  <Share2 className="w-5 h-5" />
-                  <span>{post.shares || 0} {t("Share", "ஷேர்")}</span>
+                  <Share2 className="w-4 h-4" />
+                  <span className="text-xs">{post.shares || 0}</span>
                 </button>
               </div>
 

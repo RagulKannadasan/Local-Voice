@@ -50,7 +50,7 @@ export default function AdminDashboard() {
   );
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>;
+    return <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-blue-800 dark:text-sky-500" /></div>;
   }
 
   return (
@@ -61,12 +61,12 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700">
+        <div className="bg-white dark:bg-[#0a0a0a] p-4 rounded-2xl border border-gray-200 dark:border-gray-800 transition-colors">
           <div className="flex items-center space-x-2 text-gray-500 dark:text-gray-400 mb-2">
             <BarChart3 className="w-5 h-5" />
             <span className="text-sm font-medium">Total</span>
           </div>
-          <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">{total}</span>
+          <span className="text-3xl font-bold text-gray-900 dark:text-white">{total}</span>
         </div>
 
         <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-2xl border border-green-100 dark:border-green-900/50">
@@ -109,8 +109,8 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Quick Actions</h2>
+      <div className="bg-white dark:bg-[#0a0a0a] rounded-2xl p-6 border border-gray-200 dark:border-gray-800 transition-colors">
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Quick Actions</h2>
         <p className="text-sm text-gray-600 dark:text-gray-400">Navigate to the Complaints tab to update statuses, add timeline actions, and trigger email notifications to users.</p>
       </div>
     </div>

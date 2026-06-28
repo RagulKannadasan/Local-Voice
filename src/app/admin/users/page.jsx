@@ -128,7 +128,7 @@ export default function AdminUsers() {
 
       <div className="space-y-4">
         {users.map(u => (
-          <div key={u._id} className="bg-gray-50 dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 relative">
+          <div key={u._id} className="bg-white dark:bg-[#0a0a0a] p-5 rounded-2xl border border-gray-200 dark:border-gray-800 relative transition-colors">
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="font-bold text-gray-900 dark:text-gray-100">{u.name}</h3>
@@ -158,7 +158,7 @@ export default function AdminUsers() {
                     value={u.role || 'user'}
                     disabled={updatingId === u._id}
                     onChange={(e) => handleRoleChange(u._id, e.target.value, u.permissions || [])}
-                    className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm font-medium border border-gray-200 dark:border-gray-700 rounded-lg p-1.5 focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="bg-transparent text-gray-900 dark:text-gray-100 text-sm font-medium border border-gray-200 dark:border-gray-800 rounded-lg p-1.5 focus:ring-2 focus:ring-blue-500 outline-none"
                   >
                     <option value="user">User</option>
                     <option value="admin">Restricted Admin</option>
@@ -174,7 +174,7 @@ export default function AdminUsers() {
                   <button 
                     onClick={() => togglePermission(u._id, 'manage_complaints', u.role, u.permissions || [])}
                     disabled={updatingId === u._id}
-                    className={`flex items-center space-x-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${(u.permissions || []).includes('manage_complaints') ? 'bg-blue-100 text-blue-700 border border-blue-200' : 'bg-white dark:bg-gray-900 text-gray-500 border border-gray-200 dark:border-gray-700'}`}
+                    className={`flex items-center space-x-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${(u.permissions || []).includes('manage_complaints') ? 'bg-blue-50 dark:bg-sky-900/20 text-blue-800 dark:text-sky-500 border border-blue-200 dark:border-sky-900/30' : 'bg-transparent text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-800'}`}
                   >
                     {(u.permissions || []).includes('manage_complaints') && <CheckCircle className="w-3.5 h-3.5" />}
                     <span>Manage Complaints</span>
@@ -182,7 +182,7 @@ export default function AdminUsers() {
                   <button 
                     onClick={() => togglePermission(u._id, 'manage_polls', u.role, u.permissions || [])}
                     disabled={updatingId === u._id}
-                    className={`flex items-center space-x-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${(u.permissions || []).includes('manage_polls') ? 'bg-blue-100 text-blue-700 border border-blue-200' : 'bg-white dark:bg-gray-900 text-gray-500 border border-gray-200 dark:border-gray-700'}`}
+                    className={`flex items-center space-x-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${(u.permissions || []).includes('manage_polls') ? 'bg-blue-50 dark:bg-sky-900/20 text-blue-800 dark:text-sky-500 border border-blue-200 dark:border-sky-900/30' : 'bg-transparent text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-800'}`}
                   >
                     {(u.permissions || []).includes('manage_polls') && <CheckCircle className="w-3.5 h-3.5" />}
                     <span>Manage Polls</span>
@@ -190,7 +190,7 @@ export default function AdminUsers() {
                   <button 
                     onClick={() => togglePermission(u._id, 'manage_announcements', u.role, u.permissions || [])}
                     disabled={updatingId === u._id}
-                    className={`flex items-center space-x-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${(u.permissions || []).includes('manage_announcements') ? 'bg-blue-100 text-blue-700 border border-blue-200' : 'bg-white dark:bg-gray-900 text-gray-500 border border-gray-200 dark:border-gray-700'}`}
+                    className={`flex items-center space-x-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${(u.permissions || []).includes('manage_announcements') ? 'bg-blue-50 dark:bg-sky-900/20 text-blue-800 dark:text-sky-500 border border-blue-200 dark:border-sky-900/30' : 'bg-transparent text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-800'}`}
                   >
                     {(u.permissions || []).includes('manage_announcements') && <CheckCircle className="w-3.5 h-3.5" />}
                     <span>Manage Announcements</span>

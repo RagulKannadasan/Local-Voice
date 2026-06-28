@@ -56,15 +56,15 @@ export default function AdminLayout({ children }) {
   return (
     <>
       {/* Admin Sidebar (Desktop) & Bottom Nav (Mobile) */}
-      <nav className="md:w-64 fixed bottom-0 md:top-0 left-0 md:h-screen w-full bg-slate-900 text-slate-300 border-t md:border-t-0 md:border-r border-slate-800 z-50 flex md:flex-col pb-safe transition-all">
+      <nav className="md:w-64 fixed bottom-0 md:top-0 left-0 md:h-screen w-full bg-white dark:bg-[#0a0a0a] text-gray-700 dark:text-gray-300 border-t md:border-t-0 md:border-r border-gray-200 dark:border-gray-800 z-50 flex md:flex-col pb-safe transition-colors">
         
-        <div className="hidden md:flex flex-col items-start p-6 border-b border-slate-800">
+        <div className="hidden md:flex flex-col items-start p-6 border-b border-gray-200 dark:border-gray-800">
           <div className="flex items-center">
-            <Settings className="w-8 h-8 text-blue-500 mr-3" />
-            <h2 className="text-xl font-bold text-white">Admin Portal</h2>
+            <Settings className="w-8 h-8 text-blue-600 dark:text-sky-500 mr-3" />
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Admin Portal</h2>
           </div>
           {isSuperAdmin && (
-            <span className="mt-2 text-[10px] uppercase tracking-widest bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full font-bold">Super Admin</span>
+            <span className="mt-2 text-[10px] uppercase tracking-widest bg-blue-50 dark:bg-sky-900/20 text-blue-800 dark:text-sky-500 border border-blue-200 dark:border-sky-900/30 px-2 py-0.5 rounded-full font-bold">Super Admin</span>
           )}
         </div>
 
@@ -79,8 +79,8 @@ export default function AdminLayout({ children }) {
                 className={clsx(
                   "flex flex-col md:flex-row items-center md:space-x-3 w-full md:w-auto p-2 md:p-3 rounded-xl transition-all duration-200",
                   isActive 
-                    ? "text-white bg-slate-800/50 font-medium" 
-                    : "text-slate-400 hover:text-white hover:bg-slate-800/30"
+                    ? "text-blue-800 dark:text-sky-500 bg-blue-50 dark:bg-sky-900/20 font-semibold" 
+                    : "text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-900/50"
                 )}
               >
                 <Icon className="w-5 h-5 md:w-6 md:h-6" />
@@ -92,7 +92,7 @@ export default function AdminLayout({ children }) {
           <div className="md:mt-auto hidden md:block w-full">
             <Link 
               href="/"
-              className="flex items-center space-x-3 text-slate-400 hover:text-white p-3 rounded-xl transition-all"
+              className="flex items-center space-x-3 text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-900/50 p-3 rounded-xl transition-all"
             >
               <ArrowLeft className="w-5 h-5" />
               <span>Back to App</span>
@@ -102,7 +102,7 @@ export default function AdminLayout({ children }) {
           {/* Mobile Back Button */}
           <Link 
             href="/"
-            className="md:hidden flex flex-col items-center justify-center p-2 text-slate-400 hover:text-white"
+            className="md:hidden flex flex-col items-center justify-center p-2 text-gray-500 hover:text-gray-900 dark:hover:text-white"
           >
             <ArrowLeft className="w-5 h-5" />
             <span className="text-[10px] mt-1">Exit</span>
@@ -110,8 +110,8 @@ export default function AdminLayout({ children }) {
         </div>
       </nav>
 
-      <div className="pb-16 md:pb-0">
-        <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-800">
+      <div className="md:ml-64 pb-20 md:pb-0 min-h-screen">
+        <div className="p-4 md:p-8">
           {children}
         </div>
       </div>

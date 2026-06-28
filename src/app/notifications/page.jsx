@@ -42,25 +42,25 @@ export default function NotificationsPage() {
     <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pt-2">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-          <Bell className="w-6 h-6 text-blue-500" />
+          <Bell className="w-6 h-6 text-blue-800 dark:text-sky-500" />
           {t('Notifications', 'அறிவிப்புகள்')}
         </h1>
         {notifications.length > 0 && (
-          <button className="text-sm text-blue-600 dark:text-blue-400 font-medium hover:underline">
+          <button className="text-sm text-blue-800 dark:text-sky-500 font-medium hover:underline">
             {t('Mark all as read', 'அனைத்தையும் வாசித்ததாக குறிக்கவும்')}
           </button>
         )}
       </div>
 
       {notifications.length === 0 ? (
-        <div className="text-center py-12 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800">
-          <div className="bg-gray-50 dark:bg-gray-800 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Bell className="w-8 h-8 text-gray-400" />
+        <div className="text-center py-12 bg-white dark:bg-[#0a0a0a] rounded-2xl border border-gray-200 dark:border-gray-800">
+          <div className="bg-blue-50 dark:bg-sky-900/20 border border-blue-200 dark:border-sky-900/50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Bell className="w-8 h-8 text-blue-800 dark:text-sky-500" />
           </div>
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">
             {t('No notifications yet', 'இன்னும் அறிவிப்புகள் இல்லை')}
           </h3>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
+          <p className="text-gray-500 text-sm">
             {t("We'll let you know when something new happens.", 'புதிய நிகழ்வுகள் ஏற்படும் போது உங்களுக்கு தெரிவிப்போம்.')}
           </p>
         </div>
@@ -73,8 +73,8 @@ export default function NotificationsPage() {
                 key={notification.id}
                 className={`p-4 rounded-2xl border transition-all duration-200 flex gap-4 ${
                   !notification.read
-                    ? 'bg-blue-50/50 border-blue-100 dark:bg-blue-900/10 dark:border-blue-900/30'
-                    : 'bg-white border-gray-100 dark:bg-gray-900 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-700'
+                    ? 'bg-blue-50 dark:bg-sky-900/10 border-blue-200 dark:border-sky-900/30'
+                    : 'bg-white dark:bg-[#0a0a0a] border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700'
                 }`}
               >
                 <div className={`p-3 rounded-full h-fit flex-shrink-0 ${notification.color}`}>
@@ -88,12 +88,12 @@ export default function NotificationsPage() {
                     }`}>
                       {notification.title}
                     </h3>
-                    <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                    <span className="text-xs text-gray-500 whitespace-nowrap">
                       {notification.time}
                     </span>
                   </div>
                   <p className={`text-sm ${
-                    !notification.read ? 'text-gray-700 dark:text-gray-300' : 'text-gray-500 dark:text-gray-400'
+                    !notification.read ? 'text-gray-700 dark:text-gray-300' : 'text-gray-500'
                   }`}>
                     {notification.message}
                   </p>

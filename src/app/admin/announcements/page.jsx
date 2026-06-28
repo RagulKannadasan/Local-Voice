@@ -110,7 +110,7 @@ export default function AdminAnnouncements() {
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Broadcast important information to the entire community.</p>
       </div>
 
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
+      <div className="bg-white dark:bg-[#0a0a0a] rounded-2xl p-6 border border-gray-200 dark:border-gray-800 transition-colors">
         <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">New Announcement</h2>
         <form onSubmit={handleCreate} className="space-y-4">
           <div>
@@ -120,7 +120,7 @@ export default function AdminAnnouncements() {
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+              className="w-full bg-transparent border border-gray-200 dark:border-gray-800 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
               placeholder="e.g., Water Supply Interruption"
             />
           </div>
@@ -131,7 +131,7 @@ export default function AdminAnnouncements() {
               rows={4}
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none"
+              className="w-full bg-transparent border border-gray-200 dark:border-gray-800 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none"
               placeholder="Provide full details here..."
             />
           </div>
@@ -166,7 +166,7 @@ export default function AdminAnnouncements() {
             <button 
               type="submit" 
               disabled={isSubmitting}
-              className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-medium flex items-center justify-center hover:bg-blue-700 transition-colors disabled:opacity-70"
+              className="bg-blue-600 dark:bg-sky-500 text-white px-6 py-2.5 rounded-xl font-medium flex items-center justify-center hover:bg-blue-700 dark:hover:bg-sky-600 transition-colors disabled:opacity-70"
             >
               {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Plus className="w-5 h-5 mr-2" /> Publish Announcement</>}
             </button>
@@ -186,7 +186,7 @@ export default function AdminAnnouncements() {
           announcements.map((ann) => (
             <div key={ann._id} className={clsx(
               "p-4 rounded-xl border",
-              ann.priority === 'High' ? "bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-900/30" : "bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800"
+              ann.priority === 'High' ? "bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-900/30" : "bg-white dark:bg-[#0a0a0a] border-gray-200 dark:border-gray-800 transition-colors"
             )}>
               <div className="flex justify-between items-start mb-2">
                 <h3 className="font-bold text-gray-900 dark:text-gray-100">
@@ -200,7 +200,7 @@ export default function AdminAnnouncements() {
                 <span>By {ann.author}</span>
                 <span className={clsx(
                   "px-2 py-0.5 rounded-md font-medium",
-                  ann.priority === 'High' ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                  ann.priority === 'High' ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" : "bg-blue-50 text-blue-800 dark:bg-sky-900/20 dark:text-sky-500"
                 )}>{ann.priority}</span>
               </div>
               {currentUser?.role === 'super_admin' && (

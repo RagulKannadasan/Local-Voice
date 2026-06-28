@@ -3,10 +3,24 @@ import connectToDatabase from '@/lib/mongodb';
 import Post from '@/models/Post';
 import User from '@/models/User';
 
-export async function GET() {
+export async function GET(request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const q = searchParams.get('q');
     await connectToDatabase();
-    const posts = await Post.find({}).sort({ createdAt: -1 });
+    
+    let query = {};
+    if (q) {
+      query = {
+        $or: [
+          { content: { $regex: q, $options: 'i' } },
+          { authorName: { $regex: q, $options: 'i' } },
+          { authorUsername: { $regex: q, $options: 'i' } }
+        ]
+      };
+    }
+
+    const posts = await Post.find(query).sort({ createdAt: -1 });
     return NextResponse.json({ success: true, posts }, { status: 200 });
   } catch (error) {
     console.error('Error fetching posts:', error);

@@ -12,6 +12,11 @@
   --foreground: #ededed;
 }
 
+html {
+  font-size: 110%;
+  /* Increases overall rem scale by 30% */
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -36,6 +41,7 @@ body {
 html.slide-forward ::view-transition-old(root) {
   animation-name: slide-out-left;
 }
+
 html.slide-forward ::view-transition-new(root) {
   animation-name: slide-in-right;
 }
@@ -44,24 +50,55 @@ html.slide-forward ::view-transition-new(root) {
 html.slide-backward ::view-transition-old(root) {
   animation-name: slide-out-right;
 }
+
 html.slide-backward ::view-transition-new(root) {
   animation-name: slide-in-left;
 }
 
 @keyframes slide-in-right {
-  from { transform: translateX(100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
+
 @keyframes slide-out-left {
-  from { transform: translateX(0); opacity: 1; }
-  to { transform: translateX(-30%); opacity: 0; }
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  to {
+    transform: translateX(-30%);
+    opacity: 0;
+  }
 }
 
 @keyframes slide-in-left {
-  from { transform: translateX(-100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
+
 @keyframes slide-out-right {
-  from { transform: translateX(0); opacity: 1; }
-  to { transform: translateX(30%); opacity: 0; }
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  to {
+    transform: translateX(30%);
+    opacity: 0;
+  }
 }
