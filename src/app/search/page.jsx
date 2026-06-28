@@ -78,7 +78,7 @@ export default function SearchPage() {
         {!isLoading && debouncedQuery && posts.length === 0 && (
           <div className="text-center py-12 bg-white dark:bg-[#0a0a0a] rounded-2xl border border-gray-200 dark:border-gray-800">
             <Search className="w-8 h-8 text-gray-400 mx-auto mb-3 opacity-50" />
-            <p className="text-gray-500 text-sm">{t('No results found for', 'இதற்கு முடிவுகள் ஏதுமில்லை')} "{debouncedQuery}"</p>
+            <p className="text-gray-500 text-sm">{t('No results found for', 'இதற்கு முடிவுகள் ஏதுமில்லை')} &quot;{debouncedQuery}&quot;</p>
           </div>
         )}
 
