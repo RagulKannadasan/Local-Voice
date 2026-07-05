@@ -10,13 +10,13 @@ import { useRouter } from 'next/navigation';
 export default function PollPage({ params }) {
   const unwrappedParams = use(params);
   const { id } = unwrappedParams;
-  
+
   const [mounted, setMounted] = useState(false);
   const [poll, setPoll] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
   const [copied, setCopied] = useState(false);
-  
+
   // Guest Voting State
   const [guestModal, setGuestModal] = useState({ isOpen: false, optionId: null });
   const [guestForm, setGuestForm] = useState({ name: '', phone: '' });
@@ -31,7 +31,7 @@ export default function PollPage({ params }) {
   useEffect(() => {
     setMounted(true);
     fetchPoll();
-    
+
     const saved = localStorage.getItem('localVoice_profile');
     if (saved) {
       setCurrentUser(JSON.parse(saved));
@@ -46,12 +46,12 @@ export default function PollPage({ params }) {
         const profile = JSON.parse(saved);
         userEmail = profile.email;
       }
-      
+
       const res = await fetch(`/api/polls?id=${id}&requesterEmail=${userEmail}`, { cache: 'no-store' });
       const data = await res.json();
       if (res.ok && data.polls && data.polls.length > 0) {
         let fetchedPoll = data.polls[0];
-        
+
         // If not logged in, check local storage for guest votes
         if (!userEmail) {
           const guestVotesStr = localStorage.getItem('localVoice_guestVotes');
@@ -62,12 +62,12 @@ export default function PollPage({ params }) {
             }
           }
         }
-        
+
         // Auto-set the language context to the poll's default language
         if (fetchedPoll.defaultLanguage) {
           setLanguage(fetchedPoll.defaultLanguage);
         }
-        
+
         setPoll(fetchedPoll);
       } else {
         setPoll(null);
@@ -91,12 +91,12 @@ export default function PollPage({ params }) {
     if (!poll || poll.hasVoted) return;
 
     // Optimistic update
-    const newOptions = poll.options.map(opt => 
+    const newOptions = poll.options.map(opt =>
       opt.id === optionId ? { ...opt, votes: opt.votes + 1 } : opt
     );
-    setPoll({ 
-      ...poll, 
-      options: newOptions, 
+    setPoll({
+      ...poll,
+      options: newOptions,
       totalVotes: poll.totalVotes + 1,
       hasVoted: true
     });
@@ -139,7 +139,7 @@ export default function PollPage({ params }) {
 
     const uniqueId = Math.random().toString(36).substr(2, 9);
     const guestEmail = `GUEST::${guestForm.name.trim()}::${guestForm.phone.trim() || 'N/A'}::${uniqueId}`;
-    
+
     await submitVote(guestModal.optionId, guestEmail);
     setGuestModal({ isOpen: false, optionId: null });
     setGuestForm({ name: '', phone: '' });
@@ -153,7 +153,7 @@ export default function PollPage({ params }) {
 
   const handleCommentSubmit = async () => {
     if (!commentInput.trim() || isCommenting) return;
-    
+
     setIsCommenting(true);
     try {
       const res = await fetch('/api/polls', {
@@ -204,8 +204,8 @@ export default function PollPage({ params }) {
 
   return (
     <div className="max-w-xl mx-auto pt-6 px-4 pb-20 space-y-6">
-      <button 
-        onClick={() => router.back()} 
+      <button
+        onClick={() => router.back()}
         className="flex items-center space-x-2 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
@@ -227,7 +227,7 @@ export default function PollPage({ params }) {
         <div className="space-y-3 mb-6">
           {poll.options.map((opt, index) => {
             const percentage = poll.totalVotes > 0 ? Math.round((opt.votes / poll.totalVotes) * 100) : 0;
-            
+
             return (
               <div key={opt.id} className="relative">
                 <button
@@ -241,12 +241,12 @@ export default function PollPage({ params }) {
                   )}
                 >
                   {(poll.hasVoted || !poll.isActive) && (
-                    <div 
+                    <div
                       className="absolute left-0 top-0 bottom-0 z-[-1] rounded-xl transition-all duration-1000 bg-gray-100 dark:bg-gray-800/50"
                       style={{ width: `${percentage}%` }}
                     />
                   )}
-                  
+
                   <div className="flex items-center">
                     <span className="font-bold">{index + 1}. {opt.text}</span>
                   </div>
@@ -276,7 +276,7 @@ export default function PollPage({ params }) {
         {/* Comments Section */}
         <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-800">
           <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">{t('Comments', 'கருத்துக்கள்')}</h3>
-          
+
           <div className="flex items-center space-x-2 mb-6">
             <input
               type="text"
@@ -304,7 +304,7 @@ export default function PollPage({ params }) {
                       <MessageSquareOff className="w-3 h-3 text-gray-500 dark:text-gray-400" />
                     </div>
                     <span className="font-semibold text-sm text-gray-900 dark:text-gray-100">
-                      {comment.authorName ? comment.authorName : t('Anonymous', 'ரகசியவாதி')}
+                      {comment.authorName ? comment.authorName : t('Anonymous', 'Guest')}
                     </span>
                     <span className="text-[10px] text-gray-500">• {new Date(comment.createdAt).toLocaleDateString()}</span>
                   </div>
@@ -330,7 +330,7 @@ export default function PollPage({ params }) {
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
               {t('Choose how you would like to record your vote.', 'உங்கள் வாக்கை எப்படி பதிவு செய்ய விரும்புகிறீர்கள் என்பதைத் தேர்ந்தெடுக்கவும்.')}
             </p>
-            
+
             <button
               onClick={() => router.push('/profile')}
               className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-bold text-sm shadow-md transition-all flex justify-center items-center gap-2"
@@ -357,39 +357,39 @@ export default function PollPage({ params }) {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t('Name', 'பெயர்')} <span className="text-red-500">*</span>
                 </label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   required
                   value={guestForm.name}
-                  onChange={(e) => setGuestForm({...guestForm, name: e.target.value})}
+                  onChange={(e) => setGuestForm({ ...guestForm, name: e.target.value })}
                   className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
                   placeholder={t('Enter your name', 'உங்கள் பெயரை உள்ளிடவும்')}
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t('Mobile Number', 'மொபைல் எண்')} <span className="text-gray-400 font-normal">({t('Optional', 'விருப்பத் தேர்வு')})</span>
                 </label>
-                <input 
-                  type="tel" 
+                <input
+                  type="tel"
                   value={guestForm.phone}
-                  onChange={(e) => setGuestForm({...guestForm, phone: e.target.value})}
+                  onChange={(e) => setGuestForm({ ...guestForm, phone: e.target.value })}
                   className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
                   placeholder={t('Enter mobile number', 'மொபைல் எண்ணை உள்ளிடவும்')}
                 />
               </div>
 
               <div className="flex space-x-3 pt-2">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setGuestModal({ isOpen: false, optionId: null })}
                   className="flex-1 py-2.5 rounded-xl font-medium border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors text-sm"
                 >
                   {t('Cancel', 'ரத்து செய்')}
                 </button>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="flex-1 py-2.5 rounded-xl font-medium bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors text-sm"
                 >
                   {t('Submit Vote', 'வாக்களி')}
