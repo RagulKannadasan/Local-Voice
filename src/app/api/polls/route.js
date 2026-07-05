@@ -13,12 +13,12 @@ export async function GET(request) {
 
     await connectToDatabase();
     
-    // Check if the requester is a super admin
-    let isSuperAdmin = false;
+    // Check if the requester is an admin
+    let isAdmin = false;
     if (requesterEmail) {
       const user = await User.findOne({ email: requesterEmail });
-      if (user && user.role === 'super_admin') {
-        isSuperAdmin = true;
+      if (user && (user.role === 'super_admin' || (user.permissions || []).includes('manage_announcements'))) {
+        isAdmin = true;
       }
     }
 
@@ -40,13 +40,13 @@ export async function GET(request) {
           id: opt.id,
           text: opt.text,
           votes: opt.votes,
-          // Only send the voters array if the user is a super admin
-          voters: isSuperAdmin ? opt.voters : undefined
+          // Only send the voters array if the user is an admin
+          voters: isAdmin ? opt.voters : undefined
         })),
         totalVotes: poll.totalVotes,
         author: poll.author,
-        // Only send the full votedUsers array to super admins. For regular users, we keep it completely secret.
-        votedUsers: isSuperAdmin ? poll.votedUsers : undefined,
+        // Only send the full votedUsers array to admins. For regular users, we keep it completely secret.
+        votedUsers: isAdmin ? poll.votedUsers : undefined,
         // Calculate hasVoted on the backend to avoid exposing the votedUsers array to the frontend
         hasVoted: requesterEmail ? poll.votedUsers.includes(requesterEmail) : false,
         createdAt: poll.createdAt,

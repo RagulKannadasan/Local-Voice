@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { BarChart2, Plus, Trash2, Loader2, PlayCircle, Share2, CheckCircle, XCircle } from 'lucide-react';
+import { BarChart2, Plus, Trash2, Loader2, PlayCircle, Share2, CheckCircle, XCircle, Download } from 'lucide-react';
 import clsx from 'clsx';
 import { useRouter } from 'next/navigation';
 
@@ -161,6 +161,53 @@ export default function AdminPolls() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const handleExportExcel = (poll) => {
+    let csvContent = `Poll Question:,"${poll.question.replace(/"/g, '""')}"\n\n`;
+    csvContent += "Option,Voter Name,Contact Info,Voter Type\n";
+
+    poll.options.forEach(opt => {
+      const optionText = `"${opt.text.replace(/"/g, '""')}"`;
+      if (opt.voters && opt.voters.length > 0) {
+        opt.voters.forEach(voter => {
+          let voterType = 'User';
+          let displayVoter = voter;
+          let contactInfo = '';
+          
+          if (voter.startsWith('GUEST::')) {
+            const parts = voter.split('::');
+            voterType = 'Guest';
+            displayVoter = parts[1] || 'Unknown Guest';
+            contactInfo = parts[2] && parts[2] !== 'N/A' ? parts[2] : '';
+          } else if (voter.startsWith('USER::')) {
+            const parts = voter.split('::');
+            displayVoter = parts[1] || 'User';
+            contactInfo = parts[2] || '';
+          } else {
+            // Legacy fallback
+            displayVoter = voter;
+            contactInfo = voter;
+          }
+          
+          const vName = `"${displayVoter.replace(/"/g, '""')}"`;
+          const vContact = `"${contactInfo.replace(/"/g, '""')}"`;
+          
+          csvContent += `${optionText},${vName},${vContact},${voterType}\n`;
+        });
+      } else {
+        csvContent += `${optionText},No voters,, \n`;
+      }
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Poll_Results_${poll.id || poll._id}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (!hasPermission) return null;
 
   return (
@@ -276,7 +323,7 @@ export default function AdminPolls() {
                           style={{ width: `${percentage}%` }}
                         />
                       </div>
-                      {currentUser?.role === 'super_admin' && opt.voters && opt.voters.length > 0 && (
+                      {opt.voters && opt.voters.length > 0 && (
                         <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/50 p-2 rounded-lg mt-2 border border-gray-200 dark:border-gray-800">
                           <span className="font-medium text-gray-700 dark:text-gray-300">Voters:</span>
                           <ul className="mt-1 space-y-0.5 max-h-32 overflow-y-auto">
@@ -322,6 +369,13 @@ export default function AdminPolls() {
                   <span>{new Date(poll.createdAt).toLocaleDateString()}</span>
                 </div>
                 <div className="flex items-center space-x-4">
+                  <button
+                    onClick={() => handleExportExcel(poll)}
+                    className="flex items-center space-x-1 text-green-600 hover:text-green-700 font-medium transition-colors ml-2"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Export</span>
+                  </button>
                   <button
                     onClick={() => handleShare(poll.id || poll._id)}
                     className="flex items-center space-x-1 text-blue-500 hover:text-blue-600 font-medium transition-colors"
