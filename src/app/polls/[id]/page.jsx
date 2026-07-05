@@ -157,7 +157,9 @@ export default function PollPage({ params }) {
         body: JSON.stringify({
           pollId: id,
           action: 'comment',
-          content: commentInput.trim()
+          content: commentInput.trim(),
+          userName: currentUser ? currentUser.name : undefined,
+          userEmail: currentUser ? currentUser.email : undefined
         })
       });
       const data = await res.json();
@@ -296,7 +298,10 @@ export default function PollPage({ params }) {
                     <div className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
                       <MessageSquareOff className="w-3 h-3 text-gray-500 dark:text-gray-400" />
                     </div>
-                    <span className="font-semibold text-sm text-gray-900 dark:text-gray-100">{t('Anonymous', 'ரகசியவாதி')}</span>
+                    <span className="font-semibold text-sm text-gray-900 dark:text-gray-100">
+                      {comment.authorName ? comment.authorName : t('Anonymous', 'ரகசியவாதி')}
+                      {comment.authorName && currentUser?.role === 'super_admin' && ' (Admin View)'}
+                    </span>
                     <span className="text-[10px] text-gray-500">• {new Date(comment.createdAt).toLocaleDateString()}</span>
                   </div>
                   <p className="text-sm text-gray-700 dark:text-gray-300 ml-7">{comment.content}</p>

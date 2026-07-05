@@ -16,6 +16,8 @@ const PollSchema = new mongoose.Schema({
   votedUsers: [{ type: String }], // Array of user emails who have voted
   comments: [{
     content: { type: String, required: true },
+    authorName: { type: String },
+    authorEmail: { type: String },
     createdAt: { type: Date, default: Date.now }
   }],
   createdAt: { type: Date, default: Date.now },

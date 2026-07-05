@@ -49,7 +49,12 @@ export async function GET(request) {
         votedUsers: isAdmin ? poll.votedUsers : undefined,
         // Calculate hasVoted on the backend to avoid exposing the votedUsers array to the frontend
         hasVoted: requesterEmail ? poll.votedUsers.includes(requesterEmail) : false,
-        comments: poll.comments || [],
+        comments: poll.comments ? poll.comments.map(c => ({
+          content: c.content,
+          createdAt: c.createdAt,
+          authorName: isAdmin ? c.authorName : undefined,
+          authorEmail: isAdmin ? c.authorEmail : undefined
+        })) : [],
         createdAt: poll.createdAt,
         isActive: poll.isActive
       };
@@ -113,7 +118,7 @@ export async function POST(request) {
 export async function PUT(request) {
   try {
     const data = await request.json();
-    const { pollId, optionId, userEmail, action, content } = data;
+    const { pollId, optionId, userEmail, userName, action, content } = data;
 
     if (!pollId) {
       return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
@@ -134,12 +139,19 @@ export async function PUT(request) {
         return NextResponse.json({ success: false, error: 'Empty comment' }, { status: 400 });
       }
       if (!poll.comments) poll.comments = [];
-      poll.comments.push({ content: content.trim() });
+      const newComment = { 
+        content: content.trim(),
+        authorName: userName || 'Guest',
+        authorEmail: userEmail || 'guest@localvoice.com'
+      };
+      poll.comments.push(newComment);
       await poll.save();
+      
+      // Don't leak the author info back to the client if they aren't admin (they just posted it though, but for safety)
       return NextResponse.json({ 
         success: true, 
         message: 'Comment added', 
-        comment: poll.comments[poll.comments.length - 1] 
+        comment: { content: newComment.content, createdAt: new Date() }
       }, { status: 200 });
     }
 
