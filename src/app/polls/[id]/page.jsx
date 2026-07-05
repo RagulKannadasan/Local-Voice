@@ -163,8 +163,8 @@ export default function PollPage({ params }) {
           pollId: id,
           action: 'comment',
           content: commentInput.trim(),
-          userName: currentUser ? currentUser.name : undefined,
-          userEmail: currentUser ? currentUser.email : undefined
+          userName: currentUser?.name || 'Guest',
+          userEmail: currentUser?.email || 'guest@localvoice.com'
         })
       });
       const data = await res.json();
