@@ -217,12 +217,12 @@ export default function PollPage({ params }) {
           })}
         </div>
 
-        <div className="pt-5 border-t border-gray-200 dark:border-gray-800 flex justify-between items-center">
-          <div className="flex items-center space-x-3 text-sm text-gray-500">
+        <div className="pt-5 border-t border-gray-200 dark:border-gray-800 flex flex-wrap justify-between items-center gap-3">
+          <div className="flex items-center gap-3 text-sm text-gray-500">
             <span>{poll.totalVotes} {t('votes', 'வாக்குகள்')}</span>
             <button
               onClick={handleShare}
-              className="flex items-center space-x-1 text-blue-600 dark:text-sky-400 hover:text-blue-700 dark:hover:text-sky-300 font-medium transition-colors ml-2"
+              className="flex items-center space-x-1 text-blue-600 dark:text-sky-400 hover:text-blue-700 dark:hover:text-sky-300 font-medium transition-colors"
             >
               {copied ? <CheckCircle className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
               <span>{copied ? t('Copied', 'நகலெடுக்கப்பட்டது') : t('Share', 'பகிரவும்')}</span>

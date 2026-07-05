@@ -319,12 +319,12 @@ export default function AnnouncementsPage() {
   
 
                   
-                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800 flex justify-between items-center text-xs text-gray-500">
-                    <div className="flex items-center space-x-3">
+                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800 flex flex-wrap justify-between items-center gap-3 text-xs text-gray-500">
+                    <div className="flex items-center gap-3">
                       <span>{poll.totalVotes} {t('votes', 'வாக்குகள்')}</span>
                       <button
                         onClick={() => handleShare(poll.id)}
-                        className="flex items-center space-x-1 text-blue-600 dark:text-sky-400 hover:text-blue-700 dark:hover:text-sky-300 font-medium transition-colors ml-2"
+                        className="flex items-center space-x-1 text-blue-600 dark:text-sky-400 hover:text-blue-700 dark:hover:text-sky-300 font-medium transition-colors"
                       >
                         {copiedId === poll.id ? <CheckCircle className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
                         <span>{copiedId === poll.id ? t('Copied', 'நகலெடுக்கப்பட்டது') : t('Share', 'பகிரவும்')}</span>

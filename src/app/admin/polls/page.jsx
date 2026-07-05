@@ -362,16 +362,16 @@ export default function AdminPolls() {
                   );
                 })}
               </div>
-              <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
+              <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-3 sm:space-y-0 text-xs text-gray-500 dark:text-gray-400">
                 <div>
                   <span>By {poll.author}</span>
                   <span className="mx-2">•</span>
                   <span>{new Date(poll.createdAt).toLocaleDateString()}</span>
                 </div>
-                <div className="flex items-center space-x-4">
+                <div className="flex flex-wrap items-center gap-3">
                   <button
                     onClick={() => handleExportExcel(poll)}
-                    className="flex items-center space-x-1 text-green-600 hover:text-green-700 font-medium transition-colors ml-2"
+                    className="flex items-center space-x-1 text-green-600 hover:text-green-700 font-medium transition-colors"
                   >
                     <Download className="w-3.5 h-3.5" />
                     <span>Export</span>
