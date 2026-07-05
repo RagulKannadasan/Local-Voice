@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { createPortal } from 'react-dom';
-import { Loader2, CheckCircle, Share2, ArrowLeft } from 'lucide-react';
+import { Loader2, CheckCircle, Share2, ArrowLeft, ArrowRight, MessageSquareOff } from 'lucide-react';
 import { useLanguage } from '@/lib/LanguageContext';
 import clsx from 'clsx';
 import { useRouter } from 'next/navigation';
@@ -20,6 +20,10 @@ export default function PollPage({ params }) {
   // Guest Voting State
   const [guestModal, setGuestModal] = useState({ isOpen: false, optionId: null });
   const [guestForm, setGuestForm] = useState({ name: '', phone: '' });
+
+  // Comment State
+  const [commentInput, setCommentInput] = useState('');
+  const [isCommenting, setIsCommenting] = useState(false);
 
   const { t } = useLanguage();
   const router = useRouter();
@@ -142,6 +146,37 @@ export default function PollPage({ params }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleCommentSubmit = async () => {
+    if (!commentInput.trim() || isCommenting) return;
+    
+    setIsCommenting(true);
+    try {
+      const res = await fetch('/api/polls', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pollId: id,
+          action: 'comment',
+          content: commentInput.trim()
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setPoll({
+          ...poll,
+          comments: [...(poll.comments || []), data.comment]
+        });
+        setCommentInput('');
+      } else {
+        alert(data.error || "Failed to post comment");
+      }
+    } catch (error) {
+      alert("Network error.");
+    } finally {
+      setIsCommenting(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-20">
@@ -229,6 +264,50 @@ export default function PollPage({ params }) {
             </button>
           </div>
           {poll.hasVoted && <span className="text-sm text-blue-800 dark:text-sky-500 font-medium">{t('Vote recorded', 'உங்கள் வாக்கு பதிவானது')}</span>}
+        </div>
+
+        {/* Comments Section */}
+        <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-800">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">{t('Comments', 'கருத்துக்கள்')}</h3>
+          
+          <div className="flex items-center space-x-2 mb-6">
+            <input
+              type="text"
+              placeholder={t("Share your opinion anonymously...", "உங்கள் கருத்தை ரகசியமாக பகிரவும்...")}
+              value={commentInput}
+              onChange={(e) => setCommentInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleCommentSubmit(); }}
+              className="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+            />
+            <button
+              onClick={handleCommentSubmit}
+              disabled={isCommenting || !commentInput.trim()}
+              className="bg-blue-600 text-white p-2.5 rounded-full disabled:opacity-50 hover:bg-blue-700 transition-colors"
+            >
+              {isCommenting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            {poll.comments && poll.comments.length > 0 ? (
+              poll.comments.map((comment, idx) => (
+                <div key={idx} className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl rounded-tl-none">
+                  <div className="flex items-center space-x-2 mb-1">
+                    <div className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                      <MessageSquareOff className="w-3 h-3 text-gray-500 dark:text-gray-400" />
+                    </div>
+                    <span className="font-semibold text-sm text-gray-900 dark:text-gray-100">{t('Anonymous', 'ரகசியவாதி')}</span>
+                    <span className="text-[10px] text-gray-500">• {new Date(comment.createdAt).toLocaleDateString()}</span>
+                  </div>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 ml-7">{comment.content}</p>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-6 text-gray-500">
+                <p className="text-sm">{t('No comments yet. Be the first to share your opinion anonymously!', 'இன்னும் கருத்துக்கள் இல்லை. உங்கள் கருத்தை முதலில் பகிரவும்!')}</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

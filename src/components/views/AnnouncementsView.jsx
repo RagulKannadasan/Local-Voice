@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Megaphone, AlertTriangle, Clock, Loader2, BarChart2, CheckCircle, Share2 } from 'lucide-react';
+import { Megaphone, AlertTriangle, Clock, Loader2, BarChart2, CheckCircle, Share2, MessageCircle } from 'lucide-react';
+import Link from 'next/link';
 import { useLanguage } from '@/lib/LanguageContext';
 import clsx from 'clsx';
 
@@ -329,6 +330,13 @@ export default function AnnouncementsPage() {
                         {copiedId === poll.id ? <CheckCircle className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
                         <span>{copiedId === poll.id ? t('Copied', 'நகலெடுக்கப்பட்டது') : t('Share', 'பகிரவும்')}</span>
                       </button>
+                      <Link
+                        href={`/polls/${poll.id}`}
+                        className="flex items-center space-x-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 font-medium transition-colors ml-2"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5" />
+                        <span>{poll.comments ? poll.comments.length : 0} {t('Comments', 'கருத்துக்கள்')}</span>
+                      </Link>
                     </div>
                     {hasVoted && <span className="text-blue-800 dark:text-sky-500 font-medium">{t('Vote recorded', 'உங்கள் வாக்கு பதிவானது')}</span>}
                   </div>

@@ -49,6 +49,7 @@ export async function GET(request) {
         votedUsers: isAdmin ? poll.votedUsers : undefined,
         // Calculate hasVoted on the backend to avoid exposing the votedUsers array to the frontend
         hasVoted: requesterEmail ? poll.votedUsers.includes(requesterEmail) : false,
+        comments: poll.comments || [],
         createdAt: poll.createdAt,
         isActive: poll.isActive
       };
@@ -88,7 +89,8 @@ export async function POST(request) {
       })),
       totalVotes: 0,
       author: requester.name || requesterEmail,
-      votedUsers: []
+      votedUsers: [],
+      comments: []
     });
 
     const formattedPoll = {
@@ -111,9 +113,9 @@ export async function POST(request) {
 export async function PUT(request) {
   try {
     const data = await request.json();
-    const { pollId, optionId, userEmail } = data;
+    const { pollId, optionId, userEmail, action, content } = data;
 
-    if (!pollId || !optionId || !userEmail) {
+    if (!pollId) {
       return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -125,6 +127,25 @@ export async function PUT(request) {
     }
     if (!poll.isActive) {
       return NextResponse.json({ success: false, error: 'Poll is closed' }, { status: 400 });
+    }
+
+    if (action === 'comment') {
+      if (!content || !content.trim()) {
+        return NextResponse.json({ success: false, error: 'Empty comment' }, { status: 400 });
+      }
+      if (!poll.comments) poll.comments = [];
+      poll.comments.push({ content: content.trim() });
+      await poll.save();
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Comment added', 
+        comment: poll.comments[poll.comments.length - 1] 
+      }, { status: 200 });
+    }
+
+    // Default: Vote action
+    if (!optionId || !userEmail) {
+      return NextResponse.json({ success: false, error: 'Missing required fields for voting' }, { status: 400 });
     }
 
     // Check if user already voted
