@@ -234,10 +234,10 @@ export default function PollPage({ params }) {
                   onClick={() => poll.isActive && !poll.hasVoted && handleVote(opt.id)}
                   disabled={!poll.isActive || poll.hasVoted}
                   className={clsx(
-                    "w-full flex items-center justify-between p-4 rounded-xl border text-base font-medium transition-all relative z-10 overflow-hidden",
+                    "w-full flex items-center justify-between p-4 rounded-xl border-2 text-base font-medium transition-all relative z-10 overflow-hidden",
                     poll.hasVoted || !poll.isActive
                       ? "border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 text-gray-500 dark:text-gray-400"
-                      : "border-gray-200 dark:border-gray-800 hover:border-blue-300 dark:hover:border-sky-900/50 hover:bg-blue-50 dark:hover:bg-sky-900/10 text-gray-700 dark:text-gray-300"
+                      : "border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-sky-600 hover:bg-blue-50 dark:hover:bg-sky-900/10 text-gray-700 dark:text-gray-300"
                   )}
                 >
                   {(poll.hasVoted || !poll.isActive) && (
