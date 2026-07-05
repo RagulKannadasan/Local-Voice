@@ -237,6 +237,7 @@ export async function PUT(request) {
       }
 
       poll.markModified('options');
+      poll.markModified('votedUsers');
       await poll.save();
 
       return NextResponse.json({ success: true, message: 'Vote deleted successfully' }, { status: 200 });
