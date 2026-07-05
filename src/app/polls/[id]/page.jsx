@@ -154,7 +154,7 @@ export default function PollPage({ params }) {
     return (
       <div className="text-center py-20 px-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Poll Not Found</h1>
-        <p className="text-gray-500 dark:text-gray-400 mb-6">This poll may have been deleted or doesn't exist.</p>
+        <p className="text-gray-500 dark:text-gray-400 mb-6">This poll may have been deleted or doesn&apos;t exist.</p>
         <button onClick={() => router.push('/')} className="text-blue-600 font-medium">Return Home</button>
       </div>
     );
