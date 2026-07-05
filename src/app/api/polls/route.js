@@ -212,8 +212,8 @@ export async function DELETE(request) {
     await connectToDatabase();
 
     const requester = await User.findOne({ email: requesterEmail });
-    if (!requester || requester.role !== 'super_admin') {
-      return NextResponse.json({ success: false, error: 'Forbidden: Super Admin only' }, { status: 403 });
+    if (!requester || (requester.role !== 'super_admin' && !(requester.permissions || []).includes('manage_announcements'))) {
+      return NextResponse.json({ success: false, error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
     const poll = await Poll.findByIdAndDelete(id);

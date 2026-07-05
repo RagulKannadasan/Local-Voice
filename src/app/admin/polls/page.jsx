@@ -398,8 +398,6 @@ export default function AdminPolls() {
                     <span>{copiedId === (poll.id || poll._id) ? 'Copied' : 'Share'}</span>
                   </button>
                   
-                  {currentUser?.role === 'super_admin' && (
-                    <>
                       <button
                         onClick={() => handleToggleStatus(poll.id || poll._id, poll.isActive)}
                         disabled={togglingId === (poll.id || poll._id)}
@@ -417,8 +415,6 @@ export default function AdminPolls() {
                         <Trash2 className="w-3.5 h-3.5" />
                         <span>Delete</span>
                       </button>
-                    </>
-                  )}
                 </div>
               </div>
             </div>
