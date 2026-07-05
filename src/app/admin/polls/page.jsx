@@ -239,9 +239,34 @@ export default function AdminPolls() {
                         <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/50 p-2 rounded-lg mt-2 border border-gray-200 dark:border-gray-800">
                           <span className="font-medium text-gray-700 dark:text-gray-300">Voters:</span>
                           <ul className="mt-1 space-y-0.5 max-h-32 overflow-y-auto">
-                            {opt.voters.map((voter, idx) => (
-                              <li key={idx} className="flex items-center before:content-['•'] before:mr-1.5 before:text-gray-400 truncate">{voter}</li>
-                            ))}
+                            {opt.voters.map((voter, idx) => {
+                              let isGuest = false;
+                              let displayVoter = voter;
+                              let guestPhone = '';
+                              
+                              if (voter.startsWith('GUEST::')) {
+                                const parts = voter.split('::');
+                                isGuest = true;
+                                displayVoter = parts[1] || 'Unknown Guest';
+                                guestPhone = parts[2] && parts[2] !== 'N/A' ? parts[2] : '';
+                              } else if (voter.startsWith('USER::')) {
+                                const parts = voter.split('::');
+                                displayVoter = parts[1] || 'User';
+                                guestPhone = parts[2] || '';
+                              }
+
+                              return (
+                                <li key={idx} className="flex items-center before:content-['•'] before:mr-1.5 before:text-gray-400 truncate py-0.5">
+                                  <span className={isGuest ? 'text-gray-600 dark:text-gray-300 font-medium' : 'text-gray-800 dark:text-gray-200 font-medium'}>{displayVoter}</span>
+                                  {guestPhone && <span className="ml-1.5 text-[10px] text-gray-400">({guestPhone})</span>}
+                                  {isGuest && (
+                                    <span className="ml-2 text-[9px] font-bold px-1.5 py-0.5 bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 rounded">
+                                      Unauthorized
+                                    </span>
+                                  )}
+                                </li>
+                              );
+                            })}
                           </ul>
                         </div>
                       )}

@@ -143,9 +143,18 @@ export async function PUT(request) {
       return NextResponse.json({ success: false, error: 'Option not found' }, { status: 404 });
     }
 
+    // Format voter string for admin panel
+    let voterStringToSave = userEmail;
+    if (!userEmail.startsWith('GUEST::')) {
+      const userDoc = await User.findOne({ email: userEmail });
+      if (userDoc) {
+        voterStringToSave = `USER::${userDoc.name || 'Local Voice User'}::${userEmail}`;
+      }
+    }
+
     option.votes += 1;
     if (!option.voters) option.voters = [];
-    option.voters.push(userEmail);
+    option.voters.push(voterStringToSave);
     poll.totalVotes += 1;
     poll.votedUsers.push(userEmail);
 
