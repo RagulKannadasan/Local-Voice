@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { BarChart2, Plus, Trash2, Loader2, PlayCircle, XCircle } from 'lucide-react';
+import { BarChart2, Plus, Trash2, Loader2, PlayCircle, Share2, CheckCircle, XCircle } from 'lucide-react';
 import clsx from 'clsx';
 import { useRouter } from 'next/navigation';
 
@@ -12,6 +12,8 @@ export default function AdminPolls() {
   const [currentUser, setCurrentUser] = useState(null);
   const [hasPermission, setHasPermission] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [togglingId, setTogglingId] = useState(null);
+  const [copiedId, setCopiedId] = useState(null);
   
   const [question, setQuestion] = useState('');
   const [options, setOptions] = useState([
@@ -127,6 +129,38 @@ export default function AdminPolls() {
     }
   };
 
+  const handleToggleStatus = async (id, currentStatus) => {
+    setTogglingId(id);
+    try {
+      const res = await fetch('/api/polls', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pollId: id,
+          requesterEmail: currentUser.email,
+          isActive: !currentStatus
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setPolls(polls.map(p => (p.id || p._id) === id ? { ...p, isActive: data.isActive } : p));
+      } else {
+        alert("Failed to update poll status");
+      }
+    } catch (error) {
+      alert("Network error.");
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
+  const handleShare = (id) => {
+    const url = `${window.location.origin}/polls/${id}`;
+    navigator.clipboard.writeText(url);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
   if (!hasPermission) return null;
 
   return (
@@ -215,7 +249,14 @@ export default function AdminPolls() {
           polls.map((poll) => (
             <div key={poll.id || poll._id} className="p-5 bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 rounded-xl transition-colors">
               <div className="flex justify-between items-start mb-4">
-                <h3 className="font-bold text-gray-900 dark:text-gray-100 text-lg">{poll.question}</h3>
+                <div className="flex items-start space-x-3">
+                  <h3 className="font-bold text-gray-900 dark:text-gray-100 text-lg">{poll.question}</h3>
+                  {!poll.isActive && (
+                    <span className="text-[10px] font-bold px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full whitespace-nowrap mt-1">
+                      Closed
+                    </span>
+                  )}
+                </div>
                 <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
                   {poll.totalVotes} Votes
                 </span>
@@ -280,16 +321,37 @@ export default function AdminPolls() {
                   <span className="mx-2">•</span>
                   <span>{new Date(poll.createdAt).toLocaleDateString()}</span>
                 </div>
-                {currentUser?.role === 'super_admin' && (
+                <div className="flex items-center space-x-4">
                   <button
-                    onClick={() => handleDelete(poll.id || poll._id)}
-                    disabled={deletingId === (poll.id || poll._id)}
-                    className="flex items-center space-x-1 text-red-500 hover:text-red-600 font-medium disabled:opacity-50"
+                    onClick={() => handleShare(poll.id || poll._id)}
+                    className="flex items-center space-x-1 text-blue-500 hover:text-blue-600 font-medium transition-colors"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>Delete</span>
+                    {copiedId === (poll.id || poll._id) ? <CheckCircle className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
+                    <span>{copiedId === (poll.id || poll._id) ? 'Copied' : 'Share'}</span>
                   </button>
-                )}
+                  
+                  {currentUser?.role === 'super_admin' && (
+                    <>
+                      <button
+                        onClick={() => handleToggleStatus(poll.id || poll._id, poll.isActive)}
+                        disabled={togglingId === (poll.id || poll._id)}
+                        className="flex items-center space-x-1 text-amber-500 hover:text-amber-600 font-medium disabled:opacity-50 transition-colors"
+                      >
+                        {poll.isActive ? <XCircle className="w-3.5 h-3.5" /> : <PlayCircle className="w-3.5 h-3.5" />}
+                        <span>{poll.isActive ? 'Close Poll' : 'Re-open'}</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleDelete(poll.id || poll._id)}
+                        disabled={deletingId === (poll.id || poll._id)}
+                        className="flex items-center space-x-1 text-red-500 hover:text-red-600 font-medium disabled:opacity-50 transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Delete</span>
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           ))

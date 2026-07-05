@@ -9,6 +9,7 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const requesterEmail = searchParams.get('requesterEmail');
+    const id = searchParams.get('id');
 
     await connectToDatabase();
     
@@ -21,17 +22,17 @@ export async function GET(request) {
       }
     }
 
-    // Fetch all active polls, sorted by newest first
-    const polls = await Poll.find({ isActive: true }).sort({ createdAt: -1 });
+    let query = {};
+    if (id) {
+      query._id = id;
+    } else {
+      // For general feed, only fetch active polls
+      query.isActive = true;
+    }
+
+    const polls = await Poll.find(query).sort({ createdAt: -1 });
     
-    const now = new Date();
-    
-    // Transform to match the frontend expected structure (id vs _id)
     const formattedPolls = polls.map(poll => {
-      // Fallback for older polls without expiresAt (assume 24h from createdAt)
-      const expiresAt = poll.expiresAt || new Date(new Date(poll.createdAt).getTime() + 24 * 60 * 60 * 1000);
-      const isExpired = now > expiresAt;
-      
       return {
         id: poll._id.toString(),
         question: poll.question,
@@ -49,9 +50,7 @@ export async function GET(request) {
         // Calculate hasVoted on the backend to avoid exposing the votedUsers array to the frontend
         hasVoted: requesterEmail ? poll.votedUsers.includes(requesterEmail) : false,
         createdAt: poll.createdAt,
-        expiresAt: expiresAt,
-        // Override isActive to false if 24 hours have passed
-        isActive: poll.isActive && !isExpired
+        isActive: poll.isActive
       };
     });
     
@@ -124,11 +123,7 @@ export async function PUT(request) {
     if (!poll) {
       return NextResponse.json({ success: false, error: 'Poll not found' }, { status: 404 });
     }
-    
-    const expiresAt = poll.expiresAt || new Date(new Date(poll.createdAt).getTime() + 24 * 60 * 60 * 1000);
-    const isExpired = new Date() > expiresAt;
-
-    if (!poll.isActive || isExpired) {
+    if (!poll.isActive) {
       return NextResponse.json({ success: false, error: 'Poll is closed' }, { status: 400 });
     }
 
@@ -193,6 +188,34 @@ export async function DELETE(request) {
     return NextResponse.json({ success: true, message: 'Poll deleted successfully' }, { status: 200 });
   } catch (error) {
     console.error('Error deleting poll:', error);
+    return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 });
+  }
+}
+
+export async function PATCH(request) {
+  try {
+    const data = await request.json();
+    const { pollId, requesterEmail, isActive } = data;
+
+    if (!pollId || !requesterEmail || typeof isActive !== 'boolean') {
+      return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
+    }
+
+    await connectToDatabase();
+
+    const requester = await User.findOne({ email: requesterEmail });
+    if (!requester || (requester.role !== 'super_admin' && !(requester.permissions || []).includes('manage_announcements'))) {
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+    }
+
+    const poll = await Poll.findByIdAndUpdate(pollId, { isActive }, { new: true });
+    if (!poll) {
+      return NextResponse.json({ success: false, error: 'Poll not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, isActive: poll.isActive }, { status: 200 });
+  } catch (error) {
+    console.error('Error toggling poll status:', error);
     return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 });
   }
 }

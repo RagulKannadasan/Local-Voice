@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Megaphone, AlertTriangle, Clock, Loader2, BarChart2, CheckCircle } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Megaphone, AlertTriangle, Clock, Loader2, BarChart2, CheckCircle, Share2 } from 'lucide-react';
 import { useLanguage } from '@/lib/LanguageContext';
 import clsx from 'clsx';
 
 export default function AnnouncementsPage() {
+  const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState('announcements'); // 'announcements' or 'polls'
   
   // Announcements State
@@ -15,10 +17,16 @@ export default function AnnouncementsPage() {
   // Polls State
   const [polls, setPolls] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
+  
+  // Guest Voting State
+  const [guestModal, setGuestModal] = useState({ isOpen: false, pollId: null, optionId: null });
+  const [guestForm, setGuestForm] = useState({ name: '', phone: '' });
+  const [copiedId, setCopiedId] = useState(null);
 
   const { t } = useLanguage();
 
   useEffect(() => {
+    setMounted(true);
     fetchAnnouncements();
     fetchPolls();
     
@@ -54,7 +62,23 @@ export default function AnnouncementsPage() {
       const res = await fetch(`/api/polls?requesterEmail=${userEmail}`, { cache: 'no-store' });
       const data = await res.json();
       if (res.ok) {
-        setPolls(data.polls);
+        let fetchedPolls = data.polls;
+        
+        // If not logged in, check local storage for guest votes
+        if (!userEmail) {
+          const guestVotesStr = localStorage.getItem('localVoice_guestVotes');
+          if (guestVotesStr) {
+            const guestVotes = JSON.parse(guestVotesStr);
+            fetchedPolls = fetchedPolls.map(p => {
+              if (guestVotes.includes(p.id)) {
+                return { ...p, hasVoted: true };
+              }
+              return p;
+            });
+          }
+        }
+        
+        setPolls(fetchedPolls);
       }
     } catch (error) {
       console.error("Failed to fetch polls:", error);
@@ -63,10 +87,13 @@ export default function AnnouncementsPage() {
 
   const handleVote = async (pollId, optionId) => {
     if (!currentUser) {
-      alert("Please log in to vote on this poll.");
+      setGuestModal({ isOpen: true, pollId, optionId });
       return;
     }
-    
+    await submitVote(pollId, optionId, currentUser.email);
+  };
+
+  const submitVote = async (pollId, optionId, userEmailToSubmit) => {
     const targetPoll = polls.find(p => p.id === pollId);
     if (!targetPoll || targetPoll.hasVoted) {
       return; // Already voted or invalid poll
@@ -96,7 +123,7 @@ export default function AnnouncementsPage() {
         body: JSON.stringify({
           pollId,
           optionId,
-          userEmail: currentUser.email
+          userEmail: userEmailToSubmit
         })
       });
       if (!res.ok) {
@@ -104,12 +131,41 @@ export default function AnnouncementsPage() {
         fetchPolls();
         const data = await res.json();
         alert(data.error || "Failed to submit vote");
+      } else {
+        // If guest, save to local storage
+        if (userEmailToSubmit.startsWith('GUEST::')) {
+          const savedStr = localStorage.getItem('localVoice_guestVotes');
+          const guestVotes = savedStr ? JSON.parse(savedStr) : [];
+          if (!guestVotes.includes(pollId)) {
+            guestVotes.push(pollId);
+            localStorage.setItem('localVoice_guestVotes', JSON.stringify(guestVotes));
+          }
+        }
       }
     } catch (error) {
       console.error("Voting error:", error);
       fetchPolls();
       alert("Network error. Please try again.");
     }
+  };
+
+  const handleGuestSubmit = async (e) => {
+    e.preventDefault();
+    if (!guestForm.name.trim()) return;
+
+    const uniqueId = Math.random().toString(36).substr(2, 9);
+    const guestEmail = `GUEST::${guestForm.name.trim()}::${guestForm.phone.trim() || 'N/A'}::${uniqueId}`;
+    
+    await submitVote(guestModal.pollId, guestModal.optionId, guestEmail);
+    setGuestModal({ isOpen: false, pollId: null, optionId: null });
+    setGuestForm({ name: '', phone: '' });
+  };
+
+  const handleShare = (id) => {
+    const url = `${window.location.origin}/polls/${id}`;
+    navigator.clipboard.writeText(url);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   return (
@@ -217,17 +273,10 @@ export default function AnnouncementsPage() {
                       {poll.question}
                     </h2>
                     <div className="flex flex-col items-end">
-                      {!poll.isActive ? (
+                      {!poll.isActive && (
                         <span className="ml-3 text-[10px] font-bold px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full whitespace-nowrap">
                           {t('Closed', 'முடிந்தது')}
                         </span>
-                      ) : (
-                        poll.expiresAt && (
-                          <span className="ml-3 text-[10px] font-medium px-2 py-1 bg-blue-50 dark:bg-sky-900/20 text-blue-800 dark:text-sky-400 rounded-full whitespace-nowrap flex items-center">
-                            <Clock className="w-3 h-3 mr-1" />
-                            {Math.max(0, Math.floor((new Date(poll.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60)))}h left
-                          </span>
-                        )
                       )}
                     </div>
                   </div>
@@ -268,12 +317,19 @@ export default function AnnouncementsPage() {
                     })}
                   </div>
   
-                  {!currentUser && (
-                    <p className="text-xs text-red-500 mt-4 text-center">{t('You must be logged in to vote.', 'வாக்களிக்க நீங்கள் உள்நுழைய வேண்டும்.')}</p>
-                  )}
+
                   
                   <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800 flex justify-between items-center text-xs text-gray-500">
-                    <span>{poll.totalVotes} {t('votes', 'வாக்குகள்')}</span>
+                    <div className="flex items-center space-x-3">
+                      <span>{poll.totalVotes} {t('votes', 'வாக்குகள்')}</span>
+                      <button
+                        onClick={() => handleShare(poll.id)}
+                        className="flex items-center space-x-1 text-blue-600 dark:text-sky-400 hover:text-blue-700 dark:hover:text-sky-300 font-medium transition-colors ml-2"
+                      >
+                        {copiedId === poll.id ? <CheckCircle className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
+                        <span>{copiedId === poll.id ? t('Copied', 'நகலெடுக்கப்பட்டது') : t('Share', 'பகிரவும்')}</span>
+                      </button>
+                    </div>
                     {hasVoted && <span className="text-blue-800 dark:text-sky-500 font-medium">{t('Vote recorded', 'உங்கள் வாக்கு பதிவானது')}</span>}
                   </div>
                 </div>
@@ -281,6 +337,66 @@ export default function AnnouncementsPage() {
             })}
           </div>
         </>
+      )}
+
+      {/* Guest Voting Modal */}
+      {mounted && guestModal.isOpen && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-[#0a0a0a] rounded-2xl border border-gray-200 dark:border-gray-800 w-full max-w-sm p-6 shadow-xl animate-in zoom-in-95 duration-200">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+              {t('Vote as Guest', 'விருந்தினராக வாக்களிக்கவும்')}
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
+              {t('Please provide your name to record your vote.', 'உங்கள் வாக்கை பதிவு செய்ய உங்கள் பெயரை வழங்கவும்.')}
+            </p>
+            
+            <form onSubmit={handleGuestSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  {t('Name', 'பெயர்')} <span className="text-red-500">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  required
+                  value={guestForm.name}
+                  onChange={(e) => setGuestForm({...guestForm, name: e.target.value})}
+                  className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
+                  placeholder={t('Enter your name', 'உங்கள் பெயரை உள்ளிடவும்')}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  {t('Mobile Number', 'மொபைல் எண்')} <span className="text-gray-400 font-normal">({t('Optional', 'விருப்பத் தேர்வு')})</span>
+                </label>
+                <input 
+                  type="tel" 
+                  value={guestForm.phone}
+                  onChange={(e) => setGuestForm({...guestForm, phone: e.target.value})}
+                  className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
+                  placeholder={t('Enter mobile number', 'மொபைல் எண்ணை உள்ளிடவும்')}
+                />
+              </div>
+
+              <div className="flex space-x-3 pt-2">
+                <button 
+                  type="button" 
+                  onClick={() => setGuestModal({ isOpen: false, pollId: null, optionId: null })}
+                  className="flex-1 py-2.5 rounded-xl font-medium border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors text-sm"
+                >
+                  {t('Cancel', 'ரத்து செய்')}
+                </button>
+                <button 
+                  type="submit" 
+                  className="flex-1 py-2.5 rounded-xl font-medium bg-blue-600 dark:bg-sky-500 text-white hover:bg-blue-700 dark:hover:bg-sky-600 transition-colors text-sm"
+                >
+                  {t('Submit Vote', 'வாக்களி')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );
