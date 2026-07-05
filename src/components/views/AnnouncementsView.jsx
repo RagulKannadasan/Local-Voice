@@ -283,7 +283,7 @@ export default function AnnouncementsPage() {
                   </div>
   
                   <div className="space-y-3">
-                    {poll.options.map((opt) => {
+                    {poll.options.map((opt, index) => {
                       const percentage = poll.totalVotes > 0 ? Math.round((opt.votes / poll.totalVotes) * 100) : 0;
                       
                       return (
@@ -307,7 +307,7 @@ export default function AnnouncementsPage() {
                             )}
                             
                             <div className="flex items-center">
-                              <span>{opt.text}</span>
+                              <span className="font-bold">{index + 1}. {opt.text}</span>
                             </div>
                             {(hasVoted || !poll.isActive) && (
                               <span className="font-bold">{percentage}%</span>

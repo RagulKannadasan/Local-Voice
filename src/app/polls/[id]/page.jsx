@@ -225,7 +225,7 @@ export default function PollPage({ params }) {
         </div>
 
         <div className="space-y-3 mb-6">
-          {poll.options.map((opt) => {
+          {poll.options.map((opt, index) => {
             const percentage = poll.totalVotes > 0 ? Math.round((opt.votes / poll.totalVotes) * 100) : 0;
             
             return (
@@ -248,7 +248,7 @@ export default function PollPage({ params }) {
                   )}
                   
                   <div className="flex items-center">
-                    <span>{opt.text}</span>
+                    <span className="font-bold">{index + 1}. {opt.text}</span>
                   </div>
                   {(poll.hasVoted || !poll.isActive) && (
                     <span className="font-bold">{percentage}%</span>
@@ -280,7 +280,7 @@ export default function PollPage({ params }) {
           <div className="flex items-center space-x-2 mb-6">
             <input
               type="text"
-              placeholder={t("Share your opinion anonymously...", "உங்கள் கருத்தை ரகசியமாக பகிரவும்...")}
+              placeholder={t("Share your opinion...", "கருத்தை பகிரவும்...")}
               value={commentInput}
               onChange={(e) => setCommentInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') handleCommentSubmit(); }}
