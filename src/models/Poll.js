@@ -10,6 +10,7 @@ const OptionSchema = new mongoose.Schema({
 const PollSchema = new mongoose.Schema({
   question: { type: String, required: true },
   options: [OptionSchema],
+  defaultLanguage: { type: String, enum: ['en', 'ta'], required: true, default: 'en' },
   totalVotes: { type: Number, default: 0 },
   author: { type: String, required: true }, // Name/Email of the admin who created it
   isActive: { type: Boolean, default: true },

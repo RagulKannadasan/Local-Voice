@@ -36,6 +36,7 @@ export async function GET(request) {
       return {
         id: poll._id.toString(),
         question: poll.question,
+        defaultLanguage: poll.defaultLanguage,
         options: poll.options.map(opt => ({
           id: opt.id,
           text: opt.text,
@@ -70,9 +71,9 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const data = await request.json();
-    const { requesterEmail, question, options } = data;
+    const { requesterEmail, question, options, defaultLanguage } = data;
 
-    if (!requesterEmail || !question || !options || options.length < 2) {
+    if (!requesterEmail || !question || !options || options.length < 2 || !defaultLanguage) {
       return NextResponse.json({ success: false, error: 'Missing required fields or insufficient options' }, { status: 400 });
     }
 
@@ -86,6 +87,7 @@ export async function POST(request) {
 
     const newPoll = await Poll.create({
       question,
+      defaultLanguage,
       options: options.map(opt => ({
         id: opt.id,
         text: opt.text,
@@ -101,6 +103,7 @@ export async function POST(request) {
     const formattedPoll = {
       id: newPoll._id.toString(),
       question: newPoll.question,
+      defaultLanguage: newPoll.defaultLanguage,
       options: newPoll.options,
       totalVotes: newPoll.totalVotes,
       author: newPoll.author,

@@ -25,7 +25,7 @@ export default function PollPage({ params }) {
   const [commentInput, setCommentInput] = useState('');
   const [isCommenting, setIsCommenting] = useState(false);
 
-  const { t } = useLanguage();
+  const { t, setLanguage } = useLanguage();
   const router = useRouter();
 
   useEffect(() => {
@@ -61,6 +61,11 @@ export default function PollPage({ params }) {
               fetchedPoll.hasVoted = true;
             }
           }
+        }
+        
+        // Auto-set the language context to the poll's default language
+        if (fetchedPoll.defaultLanguage) {
+          setLanguage(fetchedPoll.defaultLanguage);
         }
         
         setPoll(fetchedPoll);

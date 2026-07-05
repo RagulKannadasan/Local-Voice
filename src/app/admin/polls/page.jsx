@@ -16,6 +16,7 @@ export default function AdminPolls() {
   const [copiedId, setCopiedId] = useState(null);
   
   const [question, setQuestion] = useState('');
+  const [defaultLanguage, setDefaultLanguage] = useState('en');
   const [options, setOptions] = useState([
     { id: '1', text: '' },
     { id: '2', text: '' }
@@ -88,6 +89,7 @@ export default function AdminPolls() {
         body: JSON.stringify({
           requesterEmail: currentUser.email,
           question,
+          defaultLanguage,
           options: validOptions
         }),
       });
@@ -233,6 +235,18 @@ export default function AdminPolls() {
               className="w-full bg-transparent border border-gray-200 dark:border-gray-800 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
               placeholder="e.g., What should we name the new park?"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Default Display Language</label>
+            <select
+              value={defaultLanguage}
+              onChange={(e) => setDefaultLanguage(e.target.value)}
+              className="w-full bg-transparent border border-gray-200 dark:border-gray-800 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-900 dark:text-gray-100"
+            >
+              <option value="en">English</option>
+              <option value="ta">Tamil (தமிழ்)</option>
+            </select>
           </div>
           
           <div>
