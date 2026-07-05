@@ -214,7 +214,7 @@ export default function PollPage({ params }) {
 
       <div className="bg-white dark:bg-[#0a0a0a] p-5 md:p-8 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
         <div className="flex justify-between items-start mb-6">
-          <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white leading-snug">
+          <h1 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white leading-snug">
             {poll.question}
           </h1>
           {!poll.isActive && (
@@ -234,7 +234,7 @@ export default function PollPage({ params }) {
                   onClick={() => poll.isActive && !poll.hasVoted && handleVote(opt.id)}
                   disabled={!poll.isActive || poll.hasVoted}
                   className={clsx(
-                    "w-full flex items-center justify-between p-4 rounded-xl border-2 text-base font-medium transition-all relative z-10 overflow-hidden",
+                    "w-full flex items-center justify-between p-4 rounded-xl border-2 text-sm font-medium transition-all relative z-10 overflow-hidden",
                     poll.hasVoted || !poll.isActive
                       ? "border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 text-gray-500 dark:text-gray-400"
                       : "border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-sky-600 hover:bg-blue-50 dark:hover:bg-sky-900/10 text-gray-700 dark:text-gray-300"
