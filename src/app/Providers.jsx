@@ -10,7 +10,7 @@ export default function Providers({ children }) {
 
   return (
     <GoogleOAuthProvider clientId={clientId}>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem={true}>
+      <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
         <LanguageProvider>
           <TabProvider>
             {children}
