@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import Poll from '@/models/Poll';
 import User from '@/models/User';
-
+import nodemailer from 'nodemailer';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
@@ -99,6 +99,52 @@ export async function POST(request) {
       votedUsers: [],
       comments: []
     });
+
+    // Asynchronously send email notification to all users
+    (async () => {
+      try {
+        const allUsers = await User.find({}, 'email');
+        const allEmails = allUsers.map(u => u.email).filter(Boolean);
+
+        if (allEmails.length > 0) {
+          const transporter = nodemailer.createTransport({
+            host: process.env.SMTP_HOST,
+            port: parseInt(process.env.SMTP_PORT || '587'),
+            secure: false,
+            auth: {
+              user: process.env.SMTP_USER,
+              pass: process.env.SMTP_PASS,
+            },
+          });
+
+          const pollUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://local-voice.vercel.app'}/polls/${newPoll._id}`;
+
+          const mailOptions = {
+            from: `"Local Voice Kavarappattu" <${process.env.SMTP_USER}>`,
+            to: process.env.SMTP_USER,
+            bcc: allEmails.join(','),
+            subject: `New Poll: ${question}`,
+            html: `
+              <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+                <h2 style="color: #2563eb;">New Poll in Kavarappattu!</h2>
+                <p>A new community poll has been created on Local Voice. We value your opinion, so please take a moment to vote.</p>
+                <div style="background: #f8fafc; border-radius: 8px; padding: 16px; margin: 20px 0; border: 1px solid #e2e8f0;">
+                  <p style="font-size: 16px; font-weight: bold; margin: 0;">${question}</p>
+                </div>
+                <p>Click the button below to view the options and securely record your vote. Your identity will remain hidden from the public.</p>
+                <div style="margin-top: 30px; text-align: center;">
+                  <a href="${pollUrl}" style="background-color: #2563eb; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Vote Now</a>
+                </div>
+              </div>
+            `
+          };
+
+          await transporter.sendMail(mailOptions);
+        }
+      } catch (emailError) {
+        console.error('Failed to send poll creation email:', emailError);
+      }
+    })();
 
     const formattedPoll = {
       id: newPoll._id.toString(),
