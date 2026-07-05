@@ -204,6 +204,44 @@ export async function PUT(request) {
       }, { status: 200 });
     }
 
+    if (action === 'delete_vote') {
+      const { requesterEmail, voterString } = data;
+      
+      // Check admin privileges
+      const requester = await User.findOne({ email: requesterEmail });
+      if (!requester || (requester.role !== 'super_admin' && !(requester.permissions || []).includes('manage_announcements'))) {
+        return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+      }
+      
+      const option = poll.options.find(opt => opt.id === optionId);
+      if (!option) return NextResponse.json({ success: false, error: 'Option not found' }, { status: 404 });
+
+      // Remove from option.voters
+      const voterIndex = (option.voters || []).indexOf(voterString);
+      if (voterIndex > -1) {
+        option.voters.splice(voterIndex, 1);
+        option.votes = Math.max(0, option.votes - 1);
+        poll.totalVotes = Math.max(0, poll.totalVotes - 1);
+      }
+
+      // Extract raw email to remove from votedUsers
+      let rawEmail = voterString;
+      if (voterString.startsWith('USER::')) {
+        const parts = voterString.split('::');
+        if (parts.length >= 3) rawEmail = parts[2];
+      }
+
+      const userIndex = (poll.votedUsers || []).indexOf(rawEmail);
+      if (userIndex > -1) {
+        poll.votedUsers.splice(userIndex, 1);
+      }
+
+      poll.markModified('options');
+      await poll.save();
+
+      return NextResponse.json({ success: true, message: 'Vote deleted successfully' }, { status: 200 });
+    }
+
     // Default: Vote action
     if (!optionId || !userEmail) {
       return NextResponse.json({ success: false, error: 'Missing required fields for voting' }, { status: 400 });

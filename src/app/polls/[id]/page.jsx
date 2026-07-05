@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { createPortal } from 'react-dom';
-import { Loader2, CheckCircle, Share2, ArrowLeft, ArrowRight, MessageSquareOff } from 'lucide-react';
+import { Loader2, CheckCircle, Share2, ArrowLeft, ArrowRight, MessageSquareOff, Trash2 } from 'lucide-react';
 import { useLanguage } from '@/lib/LanguageContext';
 import clsx from 'clsx';
 import { useRouter } from 'next/navigation';
@@ -184,6 +184,31 @@ export default function PollPage({ params }) {
     }
   };
 
+  const handleDeleteVote = async (optionId, voterString) => {
+    if (!confirm('Are you sure you want to delete this vote?')) return;
+    try {
+      const res = await fetch('/api/polls', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pollId: id,
+          action: 'delete_vote',
+          optionId,
+          voterString,
+          requesterEmail: currentUser?.email
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        fetchPoll();
+      } else {
+        alert(data.error || "Failed to delete vote");
+      }
+    } catch (error) {
+      alert("Network error.");
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-20">
@@ -254,6 +279,34 @@ export default function PollPage({ params }) {
                     <span className="font-bold">{percentage}%</span>
                   )}
                 </button>
+
+                {currentUser?.role === 'super_admin' && opt.voters && opt.voters.length > 0 && (
+                  <div className="mt-2 ml-4 mb-2 space-y-1">
+                    {opt.voters.map((voter, vIdx) => {
+                      let displayName = voter;
+                      if (voter.startsWith('USER::')) {
+                        const parts = voter.split('::');
+                        displayName = parts.length >= 3 ? `${parts[1]} (${parts[2]})` : voter;
+                      } else if (voter.startsWith('GUEST::')) {
+                        const parts = voter.split('::');
+                        displayName = parts.length >= 3 ? `Guest: ${parts[1]} (${parts[2]})` : voter;
+                      }
+                      
+                      return (
+                        <div key={vIdx} className="flex items-center justify-between bg-gray-50 dark:bg-gray-800/50 p-2 rounded-lg text-xs text-gray-600 dark:text-gray-300">
+                          <span>{displayName}</span>
+                          <button
+                            onClick={() => handleDeleteVote(opt.id, voter)}
+                            className="text-red-500 hover:text-red-700 p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+                            title="Delete Vote"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             );
           })}
