@@ -132,6 +132,9 @@ export default function AdminPolls() {
   };
 
   const handleToggleStatus = async (id, currentStatus) => {
+    const actionText = currentStatus ? 'close' : 're-open';
+    if (!confirm(`Are you sure you want to ${actionText} this poll?`)) return;
+
     setTogglingId(id);
     try {
       const res = await fetch('/api/polls', {
