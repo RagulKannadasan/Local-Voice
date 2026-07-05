@@ -305,7 +305,6 @@ export default function PollPage({ params }) {
                     </div>
                     <span className="font-semibold text-sm text-gray-900 dark:text-gray-100">
                       {comment.authorName ? comment.authorName : t('Anonymous', 'ரகசியவாதி')}
-                      {comment.authorName && currentUser?.role === 'super_admin' && ' (Admin View)'}
                     </span>
                     <span className="text-[10px] text-gray-500">• {new Date(comment.createdAt).toLocaleDateString()}</span>
                   </div>
@@ -326,12 +325,33 @@ export default function PollPage({ params }) {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white dark:bg-[#0a0a0a] rounded-2xl border border-gray-200 dark:border-gray-800 w-full max-w-sm p-6 shadow-xl animate-in zoom-in-95 duration-200">
             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-              {t('Vote as Guest', 'விருந்தினராக வாக்களிக்கவும்')}
+              {t('Vote on this Poll', 'இந்த கருத்துக்கணிப்பில் வாக்களிக்கவும்')}
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
-              {t('Please provide your name to record your vote.', 'உங்கள் வாக்கை பதிவு செய்ய உங்கள் பெயரை வழங்கவும்.')}
+              {t('Choose how you would like to record your vote.', 'உங்கள் வாக்கை எப்படி பதிவு செய்ய விரும்புகிறீர்கள் என்பதைத் தேர்ந்தெடுக்கவும்.')}
             </p>
             
+            <button
+              onClick={() => router.push('/profile')}
+              className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-bold text-sm shadow-md transition-all flex justify-center items-center gap-2"
+            >
+              <span>{t('Login to Vote', 'உள்நுழைந்து வாக்களிக்கவும்')}</span>
+              <span className="bg-white/20 text-xs px-2 py-0.5 rounded-full font-medium">
+                {t('Recommended', 'சிறந்தது')}
+              </span>
+            </button>
+
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200 dark:border-gray-800"></div>
+              </div>
+              <div className="relative flex justify-center">
+                <span className="bg-white dark:bg-[#0a0a0a] px-4 text-xs font-medium text-gray-500">
+                  {t('OR VOTE AS GUEST', 'அல்லது விருந்தினராக')}
+                </span>
+              </div>
+            </div>
+
             <form onSubmit={handleGuestSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -370,7 +390,7 @@ export default function PollPage({ params }) {
                 </button>
                 <button 
                   type="submit" 
-                  className="flex-1 py-2.5 rounded-xl font-medium bg-blue-600 dark:bg-sky-500 text-white hover:bg-blue-700 dark:hover:bg-sky-600 transition-colors text-sm"
+                  className="flex-1 py-2.5 rounded-xl font-medium bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors text-sm"
                 >
                   {t('Submit Vote', 'வாக்களி')}
                 </button>
