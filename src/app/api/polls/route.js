@@ -118,7 +118,7 @@ export async function POST(request) {
               },
             });
 
-            const pollUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://local-voice.vercel.app'}/polls/${newPoll._id}`;
+            const pollUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://local-voice-codelab.vercel.app'}/polls/${newPoll._id}`;
 
             const mailOptions = {
               from: `"Local Voice Kavarappattu" <${process.env.SMTP_USER}>`,
@@ -270,7 +270,7 @@ export async function PUT(request) {
               },
             });
 
-            const pollUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://local-voice.vercel.app'}/polls/${poll._id}`;
+            const pollUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://local-voice-codelab.vercel.app'}/polls/${poll._id}`;
 
             const mailOptions = {
               from: `"Local Voice Kavarappattu" <${process.env.SMTP_USER}>`,

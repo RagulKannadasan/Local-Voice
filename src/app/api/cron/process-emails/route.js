@@ -63,7 +63,7 @@ export async function GET(request) {
               </div>
               <p>You can view the full details or check for updates on the Local Voice app.</p>
               <div style="margin-top: 30px;">
-                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://local-voice.vercel.app'}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Open Local Voice App</a>
+                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://local-voice-codelab.vercel.app'}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Open Local Voice App</a>
               </div>
             </div>
           `
