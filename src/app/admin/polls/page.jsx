@@ -243,16 +243,45 @@ export default function AdminPolls() {
     document.body.removeChild(link);
   };
 
+  const handleTestEmail = async () => {
+    try {
+      const res = await fetch('/api/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'TEST_EMAIL',
+          userEmail: currentUser.email
+        })
+      });
+      if (res.ok) {
+        alert("Test email sent to " + currentUser.email + "!");
+      } else {
+        alert("Failed to send test email");
+      }
+    } catch (error) {
+      alert("Network error while sending test email.");
+    }
+  };
+
   if (!hasPermission) return null;
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
-          <BarChart2 className="w-6 h-6 mr-2 text-blue-500" />
-          Manage Polls
-        </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Create community polls to gather public opinion.</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
+            <BarChart2 className="w-6 h-6 mr-2 text-blue-500" />
+            Manage Polls
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Create community polls to gather public opinion.</p>
+        </div>
+        <button
+          onClick={handleTestEmail}
+          className="flex items-center text-sm bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 px-4 py-2 rounded-xl hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors font-medium"
+        >
+          <Mail className="w-4 h-4 mr-2" />
+          Test Email Config
+        </button>
       </div>
 
       <div className="bg-white dark:bg-[#0a0a0a] rounded-2xl p-6 border border-gray-200 dark:border-gray-800 transition-colors">

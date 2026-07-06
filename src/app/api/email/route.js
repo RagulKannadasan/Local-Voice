@@ -36,6 +36,17 @@ export async function POST(request) {
           <p>We will email you again when the status changes.</p>
         </div>
       `;
+    } else if (type === 'TEST_EMAIL') {
+      mailOptions.to = userEmail || process.env.SMTP_USER;
+      mailOptions.subject = `Test Email from Local Voice`;
+      mailOptions.html = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #2563eb;">Test Email Successful!</h2>
+          <p>Hello,</p>
+          <p>This is a test email sent from your development environment to verify that the email configuration is working correctly.</p>
+          <p>The fallback domain is now updated to: <b>https://local-voice-codelab.vercel.app/</b></p>
+        </div>
+      `;
     } else if (type === 'STATUS_UPDATE') {
       mailOptions.to = userEmail || process.env.SMTP_USER;
       mailOptions.subject = `Update: Your Complaint in ${area} is now ${status}`;
