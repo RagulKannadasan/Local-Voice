@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { BarChart2, Plus, Trash2, Loader2, PlayCircle, Share2, CheckCircle, XCircle, Download } from 'lucide-react';
+import { BarChart2, Plus, Trash2, Loader2, PlayCircle, Share2, CheckCircle, XCircle, Download, Mail } from 'lucide-react';
 import clsx from 'clsx';
 import { useRouter } from 'next/navigation';
 
@@ -14,6 +14,8 @@ export default function AdminPolls() {
   const [deletingId, setDeletingId] = useState(null);
   const [togglingId, setTogglingId] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
+  const [sendingEmailId, setSendingEmailId] = useState(null);
+  const [sendEmail, setSendEmail] = useState(false);
   
   const [question, setQuestion] = useState('');
   const [defaultLanguage, setDefaultLanguage] = useState('en');
@@ -90,6 +92,7 @@ export default function AdminPolls() {
           requesterEmail: currentUser.email,
           question,
           defaultLanguage,
+          sendEmail,
           options: validOptions
         }),
       });
@@ -164,6 +167,33 @@ export default function AdminPolls() {
     navigator.clipboard.writeText(url);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleSendEmailNotification = async (id) => {
+    if (!confirm('Are you sure you want to broadcast an email notification for this poll to all users?')) return;
+    
+    setSendingEmailId(id);
+    try {
+      const res = await fetch(`/api/polls`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pollId: id,
+          action: 'send_email',
+          requesterEmail: currentUser.email
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert("Emails are being sent in the background!");
+      } else {
+        alert(data.error || "Failed to send email");
+      }
+    } catch (error) {
+      alert("Network error.");
+    } finally {
+      setSendingEmailId(null);
+    }
   };
 
   const handleExportExcel = (poll) => {
@@ -289,6 +319,19 @@ export default function AdminPolls() {
             )}
           </div>
 
+          <div className="flex items-center space-x-2 pt-2">
+            <input 
+              type="checkbox" 
+              id="sendEmail" 
+              checked={sendEmail} 
+              onChange={(e) => setSendEmail(e.target.checked)} 
+              className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+            />
+            <label htmlFor="sendEmail" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Send Email Notification to All Users
+            </label>
+          </div>
+
           <div className="pt-4">
             <button 
               type="submit" 
@@ -399,6 +442,15 @@ export default function AdminPolls() {
                   >
                     {copiedId === (poll.id || poll._id) ? <CheckCircle className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
                     <span>{copiedId === (poll.id || poll._id) ? 'Copied' : 'Share'}</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleSendEmailNotification(poll.id || poll._id)}
+                    disabled={sendingEmailId === (poll.id || poll._id)}
+                    className="flex items-center space-x-1 text-purple-500 hover:text-purple-600 font-medium disabled:opacity-50 transition-colors"
+                  >
+                    {sendingEmailId === (poll.id || poll._id) ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Mail className="w-3.5 h-3.5" />}
+                    <span>{sendingEmailId === (poll.id || poll._id) ? 'Sending...' : 'Send Email'}</span>
                   </button>
                   
                       <button

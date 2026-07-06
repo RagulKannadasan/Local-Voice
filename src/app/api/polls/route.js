@@ -71,7 +71,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const data = await request.json();
-    const { requesterEmail, question, options, defaultLanguage } = data;
+    const { requesterEmail, question, options, defaultLanguage, sendEmail } = data;
 
     if (!requesterEmail || !question || !options || options.length < 2 || !defaultLanguage) {
       return NextResponse.json({ success: false, error: 'Missing required fields or insufficient options' }, { status: 400 });
@@ -100,51 +100,53 @@ export async function POST(request) {
       comments: []
     });
 
-    // Asynchronously send email notification to all users
-    (async () => {
-      try {
-        const allUsers = await User.find({}, 'email');
-        const allEmails = allUsers.map(u => u.email).filter(Boolean);
+    if (sendEmail) {
+      // Asynchronously send email notification to all users
+      (async () => {
+        try {
+          const allUsers = await User.find({}, 'email');
+          const allEmails = allUsers.map(u => u.email).filter(Boolean);
 
-        if (allEmails.length > 0) {
-          const transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST,
-            port: parseInt(process.env.SMTP_PORT || '587'),
-            secure: false,
-            auth: {
-              user: process.env.SMTP_USER,
-              pass: process.env.SMTP_PASS,
-            },
-          });
+          if (allEmails.length > 0) {
+            const transporter = nodemailer.createTransport({
+              host: process.env.SMTP_HOST,
+              port: parseInt(process.env.SMTP_PORT || '587'),
+              secure: false,
+              auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASS,
+              },
+            });
 
-          const pollUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://local-voice.vercel.app'}/polls/${newPoll._id}`;
+            const pollUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://local-voice.vercel.app'}/polls/${newPoll._id}`;
 
-          const mailOptions = {
-            from: `"Local Voice Kavarappattu" <${process.env.SMTP_USER}>`,
-            to: process.env.SMTP_USER,
-            bcc: allEmails.join(','),
-            subject: `New Poll: ${question}`,
-            html: `
-              <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-                <h2 style="color: #2563eb;">New Poll in Kavarappattu!</h2>
-                <p>A new community poll has been created on Local Voice. We value your opinion, so please take a moment to vote.</p>
-                <div style="background: #f8fafc; border-radius: 8px; padding: 16px; margin: 20px 0; border: 1px solid #e2e8f0;">
-                  <p style="font-size: 16px; font-weight: bold; margin: 0;">${question}</p>
+            const mailOptions = {
+              from: `"Local Voice Kavarappattu" <${process.env.SMTP_USER}>`,
+              to: process.env.SMTP_USER,
+              bcc: allEmails.join(','),
+              subject: `New Poll: ${question}`,
+              html: `
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+                  <h2 style="color: #2563eb;">New Poll in Kavarappattu!</h2>
+                  <p>A new community poll has been created on Local Voice. We value your opinion, so please take a moment to vote.</p>
+                  <div style="background: #f8fafc; border-radius: 8px; padding: 16px; margin: 20px 0; border: 1px solid #e2e8f0;">
+                    <p style="font-size: 16px; font-weight: bold; margin: 0;">${question}</p>
+                  </div>
+                  <p>Click the button below to view the options and securely record your vote. Your identity will remain hidden from the public.</p>
+                  <div style="margin-top: 30px; text-align: center;">
+                    <a href="${pollUrl}" style="background-color: #2563eb; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Vote Now</a>
+                  </div>
                 </div>
-                <p>Click the button below to view the options and securely record your vote. Your identity will remain hidden from the public.</p>
-                <div style="margin-top: 30px; text-align: center;">
-                  <a href="${pollUrl}" style="background-color: #2563eb; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Vote Now</a>
-                </div>
-              </div>
-            `
-          };
+              `
+            };
 
-          await transporter.sendMail(mailOptions);
+            await transporter.sendMail(mailOptions);
+          }
+        } catch (emailError) {
+          console.error('Failed to send poll creation email:', emailError);
         }
-      } catch (emailError) {
-        console.error('Failed to send poll creation email:', emailError);
-      }
-    })();
+      })();
+    }
 
     const formattedPoll = {
       id: newPoll._id.toString(),
@@ -241,6 +243,63 @@ export async function PUT(request) {
       await poll.save();
 
       return NextResponse.json({ success: true, message: 'Vote deleted successfully' }, { status: 200 });
+    }
+
+    if (action === 'send_email') {
+      const { requesterEmail } = data;
+      // Check admin privileges
+      const requester = await User.findOne({ email: requesterEmail });
+      if (!requester || (requester.role !== 'super_admin' && !(requester.permissions || []).includes('manage_announcements'))) {
+        return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+      }
+
+      // Asynchronously send email notification to all users
+      (async () => {
+        try {
+          const allUsers = await User.find({}, 'email');
+          const allEmails = allUsers.map(u => u.email).filter(Boolean);
+
+          if (allEmails.length > 0) {
+            const transporter = nodemailer.createTransport({
+              host: process.env.SMTP_HOST,
+              port: parseInt(process.env.SMTP_PORT || '587'),
+              secure: false,
+              auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASS,
+              },
+            });
+
+            const pollUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://local-voice.vercel.app'}/polls/${poll._id}`;
+
+            const mailOptions = {
+              from: `"Local Voice Kavarappattu" <${process.env.SMTP_USER}>`,
+              to: process.env.SMTP_USER,
+              bcc: allEmails.join(','),
+              subject: `New Poll: ${poll.question}`,
+              html: `
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+                  <h2 style="color: #2563eb;">New Poll in Kavarappattu!</h2>
+                  <p>A new community poll has been created on Local Voice. We value your opinion, so please take a moment to vote.</p>
+                  <div style="background: #f8fafc; border-radius: 8px; padding: 16px; margin: 20px 0; border: 1px solid #e2e8f0;">
+                    <p style="font-size: 16px; font-weight: bold; margin: 0;">${poll.question}</p>
+                  </div>
+                  <p>Click the button below to view the options and securely record your vote. Your identity will remain hidden from the public.</p>
+                  <div style="margin-top: 30px; text-align: center;">
+                    <a href="${pollUrl}" style="background-color: #2563eb; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Vote Now</a>
+                  </div>
+                </div>
+              `
+            };
+
+            await transporter.sendMail(mailOptions);
+          }
+        } catch (emailError) {
+          console.error('Failed to send manual poll email:', emailError);
+        }
+      })();
+
+      return NextResponse.json({ success: true, message: 'Emails are being sent in the background' }, { status: 200 });
     }
 
     // Default: Vote action
