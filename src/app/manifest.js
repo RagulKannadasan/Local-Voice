@@ -1,12 +1,12 @@
 export default function manifest() {
   return {
-    name: 'Local Voice - Kavarappattu',
-    short_name: 'Local Voice',
+    name: 'Kavarappattu',
+    short_name: 'Kavarappattu',
     description: 'Community platform for Kavarappattu village',
     start_url: '/',
     display: 'standalone',
-    background_color: '#ffffff',
-    theme_color: '#3b82f6',
+    background_color: '#0B0B0C',
+    theme_color: '#F5A524',
     icons: [
       {
         src: '/icon-192x192.png?v=2',

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Camera, Loader2, Send, X, ArrowLeft } from 'lucide-react';
+import { Camera, Loader2, X, ArrowLeft, Image as ImageIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/lib/LanguageContext';
 import Link from 'next/link';
@@ -17,7 +17,11 @@ export default function CreatePostPage() {
   useEffect(() => {
     const saved = localStorage.getItem('localVoice_profile');
     if (saved) {
-      setCurrentUser(JSON.parse(saved));
+      try {
+        setCurrentUser(JSON.parse(saved));
+      } catch (e) {
+        router.push('/profile');
+      }
     } else {
       router.push('/profile');
     }
@@ -76,7 +80,7 @@ export default function CreatePostPage() {
           authorName: currentUser.name,
           authorEmail: currentUser.email,
           authorUsername: currentUser.username,
-          content: newPostContent,
+          content: newPostContent.trim(),
           imageUrl: imageString
         })
       });
@@ -92,66 +96,72 @@ export default function CreatePostPage() {
 
   if (!currentUser) return null;
 
+  const hasText = Boolean(newPostContent.trim());
+
   return (
-    <div className="bg-white dark:bg-[#0a0a0a] min-h-[calc(100vh-4rem)] flex flex-col">
+    <div className="bg-[var(--bg)] min-h-[calc(100vh-4rem)] flex flex-col -mx-4 sm:-mx-5 -my-3">
       {/* Top Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800/60 sticky top-0 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-md z-10">
-        <div className="flex items-center space-x-4">
-          <Link href="/feed" className="p-2 -ml-2 text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors rounded-full hover:bg-gray-50 dark:hover:bg-gray-800">
-            <ArrowLeft className="w-5 h-5" />
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--hairline)] sticky top-0 bg-[var(--bg)]/90 backdrop-blur-md z-10">
+        <div className="flex items-center space-x-3">
+          <Link
+            href="/feed"
+            aria-label="Back"
+            className="w-9 h-9 flex items-center justify-center text-[var(--text-2)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] rounded-full transition-colors -ml-1"
+          >
+            <ArrowLeft className="w-5 h-5" strokeWidth={1.5} />
           </Link>
-          <span className="font-bold text-lg text-gray-900 dark:text-white">{t('New Post', 'புதிய பதிவு')}</span>
+          <span className="font-semibold text-[16px] text-[var(--text)]">
+            {t('New Post', 'புதிய பதிவு')}
+          </span>
         </div>
+
         <button
           onClick={handlePostSubmit}
-          disabled={isSubmitting || !newPostContent.trim() || !currentUser.username}
-          className="bg-blue-600 dark:bg-sky-500 text-white px-5 py-1.5 rounded-full text-sm font-bold hover:bg-blue-700 dark:hover:bg-sky-600 transition-colors disabled:opacity-50 flex items-center space-x-2 shadow-sm shadow-blue-500/20"
+          disabled={isSubmitting || !hasText || !currentUser.username}
+          className="px-4 py-1.5 rounded-[var(--r-control)] text-[13px] font-semibold transition-all active:scale-[0.97] disabled:opacity-40 bg-[var(--accent)] text-[var(--accent-contrast)] hover:bg-[var(--accent-hover)]"
         >
-          {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-          <span>{t("Post", "பதிவிடு")}</span>
+          {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin inline" /> : t("Post", "பதிவிடு")}
         </button>
       </div>
 
       {!currentUser.username && (
-        <div className="mx-4 mt-4 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 p-3 rounded-xl border border-amber-200 dark:border-amber-800/30 text-sm flex items-start space-x-3">
-          <span className="font-bold text-lg leading-none">!</span>
-          <span>{t('You must set a unique username in your Profile before you can post.', 'நீங்கள் பதிவிடுவதற்கு முன் உங்கள் சுயவிவரத்தில் தனித்துவமான பயனர்பெயரை அமைக்க வேண்டும்.')}</span>
+        <div className="mx-4 mt-3 bg-amber-500/10 text-amber-600 dark:text-amber-400 p-3 rounded-[var(--r-control)] text-[12px] flex items-center space-x-2">
+          <span>{t('Please set a unique username in your Profile before posting.', 'பதிவிடுவதற்கு முன் உங்கள் சுயவிவரத்தில் பயனர்பெயரை அமைக்கவும்.')}</span>
         </div>
       )}
 
       {/* Composer Area */}
       <div className="flex flex-1 p-4 space-x-3">
         {/* Avatar */}
-        <div className="flex-shrink-0">
-          <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-sky-900/20 text-blue-800 dark:text-sky-500 flex items-center justify-center font-bold text-lg uppercase border border-blue-200 dark:border-sky-900/30 overflow-hidden">
-            {currentUser.profilePhoto ? (
-              <img src={currentUser.profilePhoto} alt="Profile" className="w-full h-full object-cover" />
-            ) : (
-              currentUser.name.charAt(0)
-            )}
-          </div>
+        <div className="w-10 h-10 rounded-full bg-[var(--surface-2)] text-[var(--text)] flex items-center justify-center font-semibold text-sm flex-shrink-0 mt-1">
+          {currentUser.profilePhoto ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={currentUser.profilePhoto} alt="Profile" className="w-full h-full object-cover rounded-full" />
+          ) : (
+            currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'
+          )}
         </div>
 
         {/* Input & Attachments */}
-        <div className="flex-1 flex flex-col pt-2 min-w-0">
+        <div className="flex-1 flex flex-col pt-1 min-w-0">
           <textarea
-            className="w-full bg-transparent text-gray-900 dark:text-white text-lg sm:text-xl placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none resize-none leading-relaxed"
+            className="w-full bg-transparent text-[var(--text)] text-[16px] placeholder-[var(--text-3)] resize-none leading-relaxed border-none borderless-textarea"
             placeholder={t("What's happening in Kavarappattu?", "நமது ஊரில் என்ன நடக்கிறது?")}
-            rows={newPostContent ? Math.max(5, newPostContent.split('\n').length + 1) : 5}
+            rows={6}
             value={newPostContent}
             onChange={(e) => setNewPostContent(e.target.value)}
             autoFocus
           />
 
           {imageString && (
-            <div className="relative w-full max-w-sm rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-800 mt-4 bg-gray-50 dark:bg-gray-900">
+            <div className="relative w-full max-w-sm rounded-[var(--r-card)] overflow-hidden bg-[var(--surface-2)] mt-4">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={imageString} alt="Attached media" className="w-full h-auto object-cover max-h-[400px]" />
+              <img src={imageString} alt="Attached media" className="w-full h-auto object-cover max-h-[360px]" />
               <button
                 type="button"
                 onClick={() => setImageString(null)}
-                className="absolute top-2 right-2 bg-gray-900/70 backdrop-blur-sm text-white p-2 rounded-full hover:bg-gray-900 transition-colors"
-                title="Remove image"
+                aria-label="Remove image"
+                className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full hover:bg-black/80 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -160,14 +170,15 @@ export default function CreatePostPage() {
         </div>
       </div>
 
-      {/* Bottom Toolbar */}
-      <div className="mt-auto border-t border-gray-100 dark:border-gray-800/60 p-3 bg-white dark:bg-[#0a0a0a] flex items-center z-10 sticky bottom-0">
-        <label className="flex items-center justify-center w-10 h-10 rounded-full text-blue-600 dark:text-sky-500 hover:bg-blue-50 dark:hover:bg-sky-900/20 cursor-pointer transition-colors group">
-          <Camera className="w-5 h-5 group-active:scale-90 transition-transform" />
+      {/* Bottom Media Bar */}
+      <div className="mt-auto border-t border-[var(--hairline)] p-3 px-4 bg-[var(--bg)] flex items-center justify-between sticky bottom-0">
+        <label className="flex items-center space-x-2 text-[var(--text-2)] hover:text-[var(--text)] cursor-pointer py-1 px-2 rounded-[var(--r-control)] hover:bg-[var(--surface-2)] transition-colors">
+          <Camera className="w-5 h-5" strokeWidth={1.5} />
+          <span className="text-[13px] font-medium">{t('Attach Photo', 'புகைப்படம் சேர்')}</span>
           <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
         </label>
-        <span className="text-sm font-medium text-blue-600 dark:text-sky-500 ml-2 hidden sm:block">
-          {t('Add media', 'புகைப்படம் சேர்')}
+        <span className="text-[12px] text-[var(--text-3)]">
+          {newPostContent.length}/500
         </span>
       </div>
     </div>

@@ -47,23 +47,23 @@ export async function GET(request) {
     for (const complaint of pendingComplaints) {
       try {
         const mailOptions = {
-          from: `"Local Voice Kavarappattu" <${process.env.SMTP_USER}>`,
+          from: `"Kavarappattu" <${process.env.SMTP_USER}>`,
           to: process.env.SMTP_USER, // Send to self
           bcc: allEmails.join(','), // BCC everyone
           subject: `New Community Alert: ${complaint.category} in ${complaint.location}`,
           html: `
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2 style="color: #2563eb;">New Complaint Posted in Kavarappattu</h2>
-              <p>A new issue has been reported by a community member on Local Voice.</p>
+              <h2 style="color: #F5A524;">New Complaint Posted in Kavarappattu</h2>
+              <p>A new issue has been reported by a community member on Kavarappattu.</p>
               <div style="background: #f8fafc; border-radius: 8px; padding: 16px; margin: 20px 0;">
                 <p><strong>Category:</strong> ${complaint.category}</p>
                 <p><strong>Area:</strong> ${complaint.location}</p>
                 <p><strong>Description:</strong> ${complaint.description}</p>
                 <p><strong>Reported By:</strong> ${complaint.userName}</p>
               </div>
-              <p>You can view the full details or check for updates on the Local Voice app.</p>
+              <p>You can view the full details or check for updates on the Kavarappattu app.</p>
               <div style="margin-top: 30px;">
-                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://local-voice-codelab.vercel.app'}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Open Local Voice App</a>
+                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://local-voice-codelab.vercel.app'}" style="background-color: #F5A524; color: #1A1200; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Open Kavarappattu App</a>
               </div>
             </div>
           `

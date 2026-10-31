@@ -121,14 +121,14 @@ export async function POST(request) {
             const pollUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://local-voice-codelab.vercel.app'}/polls/${newPoll._id}`;
 
             const mailOptions = {
-              from: `"Local Voice Kavarappattu" <${process.env.SMTP_USER}>`,
+              from: `"Kavarappattu" <${process.env.SMTP_USER}>`,
               to: process.env.SMTP_USER,
               bcc: allEmails.join(','),
               subject: `New Poll: ${question}`,
               html: `
                 <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-                  <h2 style="color: #2563eb;">New Poll in Kavarappattu!</h2>
-                  <p>A new community poll has been created on Local Voice. We value your opinion, so please take a moment to vote.</p>
+                  <h2 style="color: #F5A524;">New Poll in Kavarappattu!</h2>
+                  <p>A new community poll has been created on Kavarappattu. We value your opinion, so please take a moment to vote.</p>
                   <div style="background: #f8fafc; border-radius: 8px; padding: 16px; margin: 20px 0; border: 1px solid #e2e8f0;">
                     <p style="font-size: 16px; font-weight: bold; margin: 0;">${question}</p>
                   </div>
@@ -273,14 +273,14 @@ export async function PUT(request) {
             const pollUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://local-voice-codelab.vercel.app'}/polls/${poll._id}`;
 
             const mailOptions = {
-              from: `"Local Voice Kavarappattu" <${process.env.SMTP_USER}>`,
+              from: `"Kavarappattu" <${process.env.SMTP_USER}>`,
               to: process.env.SMTP_USER,
               bcc: allEmails.join(','),
               subject: `New Poll: ${poll.question}`,
               html: `
                 <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-                  <h2 style="color: #2563eb;">New Poll in Kavarappattu!</h2>
-                  <p>A new community poll has been created on Local Voice. We value your opinion, so please take a moment to vote.</p>
+                  <h2 style="color: #F5A524;">New Poll in Kavarappattu!</h2>
+                  <p>A new community poll has been created on Kavarappattu. We value your opinion, so please take a moment to vote.</p>
                   <div style="background: #f8fafc; border-radius: 8px; padding: 16px; margin: 20px 0; border: 1px solid #e2e8f0;">
                     <p style="font-size: 16px; font-weight: bold; margin: 0;">${poll.question}</p>
                   </div>
@@ -323,7 +323,7 @@ export async function PUT(request) {
     if (!userEmail.startsWith('GUEST::')) {
       const userDoc = await User.findOne({ email: userEmail });
       if (userDoc) {
-        voterStringToSave = `USER::${userDoc.name || 'Local Voice User'}::${userEmail}`;
+        voterStringToSave = `USER::${userDoc.name || 'Kavarappattu Member'}::${userEmail}`;
       }
     }
 

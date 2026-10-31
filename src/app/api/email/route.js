@@ -17,7 +17,7 @@ export async function POST(request) {
     });
 
     let mailOptions = {
-      from: `"Local Voice Admin" <${process.env.SMTP_USER}>`,
+      from: `"Kavarappattu" <${process.env.SMTP_USER}>`,
     };
 
     if (type === 'NEW_COMPLAINT') {
@@ -25,8 +25,8 @@ export async function POST(request) {
       mailOptions.subject = `Confirmation: Your Complaint about ${category} in ${area}`;
       mailOptions.html = `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #2563eb;">We received your complaint!</h2>
-          <p>Thank you for submitting a report to Local Voice. Our admins have been notified.</p>
+          <h2 style="color: #F5A524;">We received your complaint!</h2>
+          <p>Thank you for submitting a report to Kavarappattu. Our admins have been notified.</p>
           <div style="background: #f8fafc; border-radius: 8px; padding: 16px; margin: 20px 0;">
             <p><strong>Category:</strong> ${category}</p>
             <p><strong>Area:</strong> ${area}</p>
@@ -38,10 +38,10 @@ export async function POST(request) {
       `;
     } else if (type === 'TEST_EMAIL') {
       mailOptions.to = userEmail || process.env.SMTP_USER;
-      mailOptions.subject = `Test Email from Local Voice`;
+      mailOptions.subject = `Test Email from Kavarappattu`;
       mailOptions.html = `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #2563eb;">Test Email Successful!</h2>
+          <h2 style="color: #F5A524;">Test Email Successful!</h2>
           <p>Hello,</p>
           <p>This is a test email sent from your development environment to verify that the email configuration is working correctly.</p>
           <p>The fallback domain is now updated to: <b>https://local-voice-codelab.vercel.app/</b></p>
@@ -56,7 +56,7 @@ export async function POST(request) {
       mailOptions.html = `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: ${statusColor};">Complaint Status Updated</h2>
-          <p>The status of your complaint regarding <strong>${category}</strong> in <strong>${area}</strong> has been updated by the Local Voice administration.</p>
+          <p>The status of your complaint regarding <strong>${category}</strong> in <strong>${area}</strong> has been updated by the Kavarappattu administration.</p>
           <div style="background: #f8fafc; border-radius: 8px; padding: 16px; margin: 20px 0; border-left: 4px solid ${statusColor};">
             <p><strong>New Status:</strong> <span style="color: ${statusColor}; font-weight: bold; font-size: 18px;">${status}</span></p>
             <p><strong>Original Description:</strong> ${description}</p>

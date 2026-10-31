@@ -11,12 +11,12 @@ const transporter = nodemailer.createTransport({
 });
 
 const mailOptions = {
-  from: '"Local Voice Kavarappattu" <freeuseshared@gmail.com>',
+  from: '"Kavarappattu" <freeuseshared@gmail.com>',
   to: 'ragulkavai@gmail.com',
-  subject: 'Test Email from Local Voice',
+  subject: 'Test Email from Kavarappattu',
   html: `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #2563eb;">Test Email Successful!</h2>
+      <h2 style="color: #F5A524;">Test Email Successful!</h2>
       <p>Hello,</p>
       <p>This is a test email sent from your development environment to verify that the email configuration is working correctly.</p>
       <p>The fallback domain is now updated to: <b>https://local-voice-codelab.vercel.app/</b></p>

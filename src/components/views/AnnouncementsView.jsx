@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Megaphone, AlertTriangle, Clock, Loader2, BarChart2, CheckCircle, Share2, MessageCircle } from 'lucide-react';
-import Link from 'next/link';
+import { Megaphone, AlertCircle, Clock, Loader2, BarChart2, CheckCircle2, Share2, Check } from 'lucide-react';
 import { useLanguage } from '@/lib/LanguageContext';
 import clsx from 'clsx';
+import EmptyState from '@/components/EmptyState';
+import { ListCardSkeleton } from '@/components/Skeleton';
 
 export default function AnnouncementsPage() {
   const [mounted, setMounted] = useState(false);
@@ -33,7 +34,9 @@ export default function AnnouncementsPage() {
     
     const saved = localStorage.getItem('localVoice_profile');
     if (saved) {
-      setCurrentUser(JSON.parse(saved));
+      try {
+        setCurrentUser(JSON.parse(saved));
+      } catch (e) {}
     }
   }, []);
 
@@ -42,7 +45,7 @@ export default function AnnouncementsPage() {
       const res = await fetch('/api/announcements', { cache: 'no-store' });
       const data = await res.json();
       if (res.ok) {
-        setAnnouncements(data.announcements);
+        setAnnouncements(data.announcements || []);
       }
     } catch (error) {
       console.error("Failed to fetch announcements:", error);
@@ -63,7 +66,7 @@ export default function AnnouncementsPage() {
       const res = await fetch(`/api/polls?requesterEmail=${userEmail}`, { cache: 'no-store' });
       const data = await res.json();
       if (res.ok) {
-        let fetchedPolls = data.polls;
+        let fetchedPolls = data.polls || [];
         
         // If not logged in, check local storage for guest votes
         if (!userEmail) {
@@ -96,9 +99,7 @@ export default function AnnouncementsPage() {
 
   const submitVote = async (pollId, optionId, userEmailToSubmit) => {
     const targetPoll = polls.find(p => p.id === pollId);
-    if (!targetPoll || targetPoll.hasVoted) {
-      return; // Already voted or invalid poll
-    }
+    if (!targetPoll || targetPoll.hasVoted) return;
 
     // Optimistic update
     const updated = polls.map(poll => {
@@ -121,19 +122,13 @@ export default function AnnouncementsPage() {
       const res = await fetch('/api/polls', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          pollId,
-          optionId,
-          userEmail: userEmailToSubmit
-        })
+        body: JSON.stringify({ pollId, optionId, userEmail: userEmailToSubmit })
       });
       if (!res.ok) {
-        // Revert on failure
         fetchPolls();
         const data = await res.json();
         alert(data.error || "Failed to submit vote");
       } else {
-        // If guest, save to local storage
         if (userEmailToSubmit.startsWith('GUEST::')) {
           const savedStr = localStorage.getItem('localVoice_guestVotes');
           const guestVotes = savedStr ? JSON.parse(savedStr) : [];
@@ -170,233 +165,253 @@ export default function AnnouncementsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header Tabs */}
-      <div className="bg-white dark:bg-[#0a0a0a] rounded-2xl border border-gray-200 dark:border-gray-800 p-2 flex overflow-hidden">
+    <div className="space-y-5 pb-20">
+      {/* Segmented Control Header: calm surface-2 pill */}
+      <div className="bg-[var(--surface-2)] p-1 rounded-[var(--r-control)] flex items-center">
         <button
           onClick={() => setActiveTab('announcements')}
           className={clsx(
-            "flex-1 flex justify-center items-center space-x-2 py-3 px-4 rounded-xl font-medium transition-colors text-sm",
+            "flex-1 flex justify-center items-center space-x-2 py-2 rounded-[10px] text-[13px] font-medium transition-all",
             activeTab === 'announcements' 
-              ? "bg-blue-50 dark:bg-sky-900/20 text-blue-800 dark:text-sky-500 border border-blue-200 dark:border-sky-900/50" 
-              : "text-gray-600 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-900 border border-transparent"
+              ? "bg-[var(--surface-1)] text-[var(--text)] shadow-[var(--shadow-soft)]" 
+              : "text-[var(--text-2)] hover:text-[var(--text)]"
           )}
         >
-          <Megaphone className="w-4 h-4" />
+          <Megaphone className="w-4 h-4" strokeWidth={1.5} />
           <span>{t('Announcements', 'அறிவிப்புகள்')}</span>
         </button>
         <button
           onClick={() => setActiveTab('polls')}
           className={clsx(
-            "flex-1 flex justify-center items-center space-x-2 py-3 px-4 rounded-xl font-medium transition-colors text-sm",
+            "flex-1 flex justify-center items-center space-x-2 py-2 rounded-[10px] text-[13px] font-medium transition-all",
             activeTab === 'polls' 
-              ? "bg-blue-50 dark:bg-sky-900/20 text-blue-800 dark:text-sky-500 border border-blue-200 dark:border-sky-900/50" 
-              : "text-gray-600 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-900 border border-transparent"
+              ? "bg-[var(--surface-1)] text-[var(--text)] shadow-[var(--shadow-soft)]" 
+              : "text-[var(--text-2)] hover:text-[var(--text)]"
           )}
         >
-          <BarChart2 className="w-4 h-4" />
+          <BarChart2 className="w-4 h-4" strokeWidth={1.5} />
           <span>{t('Polls', 'கருத்துக்கணிப்பு')}</span>
         </button>
       </div>
 
+      {/* Announcements Tab */}
       {activeTab === 'announcements' && (
-        <>
-          <div className="px-2">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">{t('Official Board', 'அதிகாரபூர்வ அறிவிப்புகள்')}</h1>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('Updates from Kavarappattu Panchayat.', 'ஊராட்சியின் அறிவிப்புகள்.')}</p>
+        <div className="space-y-4">
+          <div className="px-1">
+            <h1 className="text-[17px] font-semibold text-[var(--text)] tracking-tight">
+              {t('Official Board', 'அதிகாரபூர்வ அறிவிப்புகள்')}
+            </h1>
+            <p className="text-[13px] text-[var(--text-2)] mt-0.5">
+              {t('Notices from Kavarappattu Panchayat.', 'ஊராட்சியின் நேரடி அறிவிப்புகள்.')}
+            </p>
           </div>
 
           {isLoading ? (
-            <div className="flex justify-center items-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-blue-800 dark:text-sky-500" />
+            <div className="space-y-3">
+              <ListCardSkeleton />
+              <ListCardSkeleton />
             </div>
           ) : announcements.length === 0 ? (
-            <div className="text-center py-12 bg-white dark:bg-[#0a0a0a] rounded-2xl border border-gray-200 dark:border-gray-800">
-              <p className="text-gray-500">{t('No announcements at this time.', 'தற்போது எந்த அறிவிப்புகளும் இல்லை.')}</p>
-            </div>
+            <EmptyState
+              icon={Megaphone}
+              title={t('No announcements at this time', 'தற்போது எந்த அறிவிப்புகளும் இல்லை')}
+              description={t('Panchayat notices and official village updates will appear here.', 'புதிய அறிவிப்புகள் வெளியாகும் போது இங்கு தோன்றும்.')}
+            />
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {announcements.map((ann) => (
-                <div 
+                <article 
                   key={ann._id} 
                   className={clsx(
-                    "p-5 rounded-2xl border transition-colors",
+                    "p-4 rounded-[var(--r-card)] bg-[var(--surface-1)] border transition-all duration-200",
                     ann.priority === 'High' 
-                      ? "bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-900/30" 
-                      : "bg-white dark:bg-[#0a0a0a] border-gray-200 dark:border-gray-800"
+                      ? "border-l-4 border-l-red-500 border-t-[var(--hairline)] border-r-[var(--hairline)] border-b-[var(--hairline)]" 
+                      : "border-l-4 border-l-[var(--accent)] border-t-[var(--hairline)] border-r-[var(--hairline)] border-b-[var(--hairline)]"
                   )}
                 >
-                  <div className="flex justify-between items-start mb-3">
-                    <h2 className={clsx(
-                      "text-lg font-bold leading-tight",
-                      ann.priority === 'High' ? "text-red-600 dark:text-red-400" : "text-gray-900 dark:text-white"
-                    )}>
-                      {ann.priority === 'High' && <AlertTriangle className="inline w-5 h-5 mr-2 mb-1" />}
-                      {ann.title}
-                    </h2>
-                    <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center whitespace-nowrap ml-3">
-                      <Clock className="w-3.5 h-3.5 mr-1" />
-                      {new Date(ann.createdAt).toLocaleDateString()}
-                    </span>
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex items-center space-x-2">
+                      <span className={clsx(
+                        "inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium",
+                        ann.priority === 'High'
+                          ? "bg-red-500/10 text-red-500"
+                          : "bg-[var(--accent-soft)] text-[var(--accent)]"
+                      )}>
+                        {ann.priority === 'High' ? t('Urgent', 'அவசரம்') : t('Official', 'அதிகாரபூர்வம்')}
+                      </span>
+                      <h2 className="text-[15px] font-semibold text-[var(--text)] leading-snug">
+                        {ann.title}
+                      </h2>
+                    </div>
+                    <time className="text-[11px] text-[var(--text-3)] whitespace-nowrap ml-2">
+                      {new Date(ann.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                    </time>
                   </div>
-                  <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed mb-4">
+
+                  <p className="text-[14px] text-[var(--text-2)] whitespace-pre-wrap leading-relaxed mb-3">
                     {ann.content}
                   </p>
-                  <div className="flex items-center text-xs font-medium text-gray-500 dark:text-gray-400 pt-3 border-t border-gray-200 dark:border-gray-800/50">
-                    <span>{t('Posted by:', 'பதிவிட்டவர்:')} {ann.author}</span>
+
+                  <div className="flex items-center justify-between text-[11px] text-[var(--text-3)] pt-2 border-t border-[var(--hairline)]">
+                    <span>{t('By:', 'வழங்கியவர்:')} {ann.author}</span>
                   </div>
-                </div>
+                </article>
               ))}
             </div>
           )}
-        </>
+        </div>
       )}
 
+      {/* Polls Tab */}
       {activeTab === 'polls' && (
-        <>
-          <div className="px-2">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">{t('Opinion Polls', 'கருத்துக்கணிப்பு')}</h1>
-            <p className="text-xs text-gray-500 mt-1">{t('Your voice matters in community decisions.', 'சமூக முடிவுகளில் உங்கள் குரல் முக்கியமானது.')}</p>
+        <div className="space-y-4">
+          <div className="px-1">
+            <h1 className="text-[17px] font-semibold text-[var(--text)] tracking-tight">
+              {t('Opinion Polls', 'கருத்துக்கணிப்பு')}
+            </h1>
+            <p className="text-[13px] text-[var(--text-2)] mt-0.5">
+              {t('Have your say in village decisions.', 'ஊர் முடிவுகளில் உங்கள் கருத்தை பதிவு செய்யுங்கள்.')}
+            </p>
           </div>
 
-          <div className="space-y-4 pb-20">
-            {polls.length === 0 ? (
-              <div className="text-center py-12 bg-white dark:bg-[#0a0a0a] rounded-2xl border border-gray-200 dark:border-gray-800">
-                <p className="text-gray-500">{t('No active polls at this time.', 'தற்போது எந்த கருத்துக்கணிப்பும் இல்லை.')}</p>
-              </div>
-            ) : polls.map((poll) => {
-              const hasVoted = poll.hasVoted;
-              
-              return (
-                <div key={poll.id} className="bg-white dark:bg-[#0a0a0a] p-5 rounded-2xl border border-gray-200 dark:border-gray-800 transition-colors">
-                  <div className="flex justify-between items-start mb-4">
-                    <h2 className="text-base font-semibold text-gray-900 dark:text-white leading-snug">
-                      {poll.question}
-                    </h2>
-                    <div className="flex flex-col items-end">
+          {polls.length === 0 ? (
+            <EmptyState
+              icon={BarChart2}
+              title={t('No active polls', 'தற்போது கருத்துக்கணிப்புகள் இல்லை')}
+              description={t('New community voting topics will be published here.', 'புதிய வாக்கெடுப்புகள் தொடங்கப்படும் போது இங்கு பார்க்கலாம்.')}
+            />
+          ) : (
+            <div className="space-y-3.5">
+              {polls.map((poll) => {
+                const hasVoted = poll.hasVoted;
+                
+                return (
+                  <div key={poll.id} className="bg-[var(--surface-1)] p-4 rounded-[var(--r-card)] border border-[var(--hairline)] shadow-[var(--shadow-soft)]">
+                    <div className="flex justify-between items-start mb-3">
+                      <h2 className="text-[15px] font-semibold text-[var(--text)] leading-snug">
+                        {poll.question}
+                      </h2>
                       {!poll.isActive && (
-                        <span className="ml-3 text-[10px] font-bold px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full whitespace-nowrap">
+                        <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-[var(--surface-2)] text-[var(--text-3)] whitespace-nowrap ml-2">
                           {t('Closed', 'முடிந்தது')}
                         </span>
                       )}
                     </div>
-                  </div>
-  
-                  <div className="space-y-3">
-                    {poll.options.map((opt, index) => {
-                      const percentage = poll.totalVotes > 0 ? Math.round((opt.votes / poll.totalVotes) * 100) : 0;
-                      
-                      return (
-                        <div key={opt.id} className="relative">
-                          <button
-                            onClick={() => poll.isActive && !hasVoted && handleVote(poll.id, opt.id)}
-                            disabled={!poll.isActive || hasVoted}
-                            className={clsx(
-                              "w-full flex items-center justify-between p-3 rounded-xl border-2 text-sm font-medium transition-all relative z-10 overflow-hidden",
-                              hasVoted || !poll.isActive
-                                ? "border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 text-gray-500 dark:text-gray-400"
-                                : "border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-sky-600 hover:bg-blue-50 dark:hover:bg-sky-900/10 text-gray-700 dark:text-gray-300"
-                            )}
-                          >
-                            {/* Progress Bar Background */}
-                            {(hasVoted || !poll.isActive) && (
-                              <div 
-                                className="absolute left-0 top-0 bottom-0 z-[-1] rounded-xl transition-all duration-1000 bg-gray-100 dark:bg-gray-800/50"
-                                style={{ width: `${percentage}%` }}
-                              />
-                            )}
-                            
-                            <div className="flex items-center">
-                              <span className="font-bold">{index + 1}. {opt.text}</span>
-                            </div>
-                            {(hasVoted || !poll.isActive) && (
-                              <span className="font-bold">{percentage}%</span>
-                            )}
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-  
 
-                  
-                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800 flex flex-wrap justify-between items-center gap-3 text-xs text-gray-500">
-                    <div className="flex items-center gap-3">
+                    <div className="space-y-2">
+                      {poll.options.map((opt, index) => {
+                        const percentage = poll.totalVotes > 0 ? Math.round((opt.votes / poll.totalVotes) * 100) : 0;
+                        
+                        return (
+                          <div key={opt.id} className="relative">
+                            <button
+                              onClick={() => poll.isActive && !hasVoted && handleVote(poll.id, opt.id)}
+                              disabled={!poll.isActive || hasVoted}
+                              className={clsx(
+                                "w-full min-h-[44px] flex items-center justify-between px-3.5 py-2.5 rounded-[var(--r-control)] text-[13px] font-medium transition-all relative overflow-hidden text-left",
+                                hasVoted || !poll.isActive
+                                  ? "bg-[var(--surface-2)] text-[var(--text-2)] cursor-default"
+                                  : "bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--surface-3)] active:scale-[0.98]"
+                              )}
+                            >
+                              {(hasVoted || !poll.isActive) && (
+                                <div
+                                  className="absolute left-0 top-0 bottom-0 rounded-[var(--r-control)] bg-[var(--accent-soft)] transition-all duration-700 pointer-events-none"
+                                  style={{ width: `${percentage}%` }}
+                                />
+                              )}
+
+                              <span className="relative z-10 flex-1 pr-2 truncate">
+                                {opt.text}
+                              </span>
+                              {(hasVoted || !poll.isActive) && (
+                                <span className="relative z-10 text-[12px] font-semibold text-[var(--text)]">
+                                  {percentage}%
+                                </span>
+                              )}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="pt-3 mt-3 border-t border-[var(--hairline)] flex justify-between items-center text-[12px] text-[var(--text-2)]">
                       <span>{poll.totalVotes} {t('votes', 'வாக்குகள்')}</span>
                       <button
                         onClick={() => handleShare(poll.id)}
-                        className="flex items-center space-x-1 text-blue-600 dark:text-sky-400 hover:text-blue-700 dark:hover:text-sky-300 font-medium transition-colors"
+                        className="flex items-center space-x-1 text-[var(--text-2)] hover:text-[var(--text)] transition-colors p-1"
                       >
-                        {copiedId === poll.id ? <CheckCircle className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
-                        <span>{copiedId === poll.id ? t('Copied', 'நகலெடுக்கப்பட்டது') : t('Share', 'பகிரவும்')}</span>
+                        {copiedId === poll.id ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-[var(--accent)]" />
+                            <span className="text-[var(--accent)]">{t('Copied', 'நகலானது')}</span>
+                          </>
+                        ) : (
+                          <>
+                            <Share2 className="w-3.5 h-3.5" strokeWidth={1.5} />
+                            <span>{t('Share', 'பகிர்')}</span>
+                          </>
+                        )}
                       </button>
-                      <Link
-                        href={`/polls/${poll.id}`}
-                        className="flex items-center space-x-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 font-medium transition-colors ml-2"
-                      >
-                        <MessageCircle className="w-3.5 h-3.5" />
-                        <span>{poll.comments ? poll.comments.length : 0} {t('Comments', 'கருத்துக்கள்')}</span>
-                      </Link>
                     </div>
-                    {hasVoted && <span className="text-blue-800 dark:text-sky-500 font-medium">{t('Vote recorded', 'உங்கள் வாக்கு பதிவானது')}</span>}
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        </>
+                );
+              })}
+            </div>
+          )}
+        </div>
       )}
 
-      {/* Guest Voting Modal */}
+      {/* Guest Modal */}
       {mounted && guestModal.isOpen && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-[#0a0a0a] rounded-2xl border border-gray-200 dark:border-gray-800 w-full max-w-sm p-6 shadow-xl animate-in zoom-in-95 duration-200">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-              {t('Vote as Guest', 'விருந்தினராக வாக்களிக்கவும்')}
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-[var(--surface-1)] rounded-[var(--r-card)] border border-[var(--hairline)] w-full max-w-sm p-5 shadow-[var(--shadow-lift)]">
+            <h3 className="text-[17px] font-semibold text-[var(--text)] mb-1">
+              {t('Vote on this Poll', 'வாக்களிக்கவும்')}
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
-              {t('Please provide your name to record your vote.', 'உங்கள் வாக்கை பதிவு செய்ய உங்கள் பெயரை வழங்கவும்.')}
+            <p className="text-[13px] text-[var(--text-2)] mb-4 leading-relaxed">
+              {t('Enter your name to cast your vote as a resident.', 'வாக்களிக்க உங்கள் பெயரை உள்ளிடவும்.')}
             </p>
-            
-            <form onSubmit={handleGuestSubmit} className="space-y-4">
+
+            <form onSubmit={handleGuestSubmit} className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-[12px] font-medium text-[var(--text-2)] mb-1">
                   {t('Name', 'பெயர்')} <span className="text-red-500">*</span>
                 </label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   required
                   value={guestForm.name}
-                  onChange={(e) => setGuestForm({...guestForm, name: e.target.value})}
-                  className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
-                  placeholder={t('Enter your name', 'உங்கள் பெயரை உள்ளிடவும்')}
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t('Mobile Number', 'மொபைல் எண்')} <span className="text-gray-400 font-normal">({t('Optional', 'விருப்பத் தேர்வு')})</span>
-                </label>
-                <input 
-                  type="tel" 
-                  value={guestForm.phone}
-                  onChange={(e) => setGuestForm({...guestForm, phone: e.target.value})}
-                  className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
-                  placeholder={t('Enter mobile number', 'மொபைல் எண்ணை உள்ளிடவும்')}
+                  onChange={(e) => setGuestForm({ ...guestForm, name: e.target.value })}
+                  className="w-full bg-[var(--surface-2)] rounded-[var(--r-control)] p-3 text-[14px] text-[var(--text)] outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                  placeholder={t('Enter your name', 'உங்கள் பெயர்')}
                 />
               </div>
 
-              <div className="flex space-x-3 pt-2">
-                <button 
-                  type="button" 
+              <div>
+                <label className="block text-[12px] font-medium text-[var(--text-2)] mb-1">
+                  {t('Phone (Optional)', 'தொலைபேசி (விருப்பத்தேர்வு)')}
+                </label>
+                <input
+                  type="tel"
+                  value={guestForm.phone}
+                  onChange={(e) => setGuestForm({ ...guestForm, phone: e.target.value })}
+                  className="w-full bg-[var(--surface-2)] rounded-[var(--r-control)] p-3 text-[14px] text-[var(--text)] outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                  placeholder={t('Mobile number', 'கைபேசி எண்')}
+                />
+              </div>
+
+              <div className="flex space-x-2 pt-2">
+                <button
+                  type="button"
                   onClick={() => setGuestModal({ isOpen: false, pollId: null, optionId: null })}
-                  className="flex-1 py-2.5 rounded-xl font-medium border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors text-sm"
+                  className="flex-1 py-2.5 rounded-[var(--r-control)] font-medium text-[13px] text-[var(--text-2)] bg-[var(--surface-2)] hover:bg-[var(--surface-3)] transition-colors"
                 >
-                  {t('Cancel', 'ரத்து செய்')}
+                  {t('Cancel', 'ரத்து')}
                 </button>
-                <button 
-                  type="submit" 
-                  className="flex-1 py-2.5 rounded-xl font-medium bg-blue-600 dark:bg-sky-500 text-white hover:bg-blue-700 dark:hover:bg-sky-600 transition-colors text-sm"
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 rounded-[var(--r-control)] font-semibold text-[13px] bg-[var(--accent)] text-[var(--accent-contrast)] hover:bg-[var(--accent-hover)] active:scale-[0.98] transition-all"
                 >
                   {t('Submit Vote', 'வாக்களி')}
                 </button>

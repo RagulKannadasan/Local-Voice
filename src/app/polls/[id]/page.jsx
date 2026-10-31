@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { createPortal } from 'react-dom';
-import { Loader2, CheckCircle, Share2, ArrowLeft, ArrowRight, MessageSquareOff, Trash2 } from 'lucide-react';
+import { Loader2, CheckCircle, Share2, ArrowLeft, ArrowRight, MessageSquareOff, Trash2, Check, Send } from 'lucide-react';
 import { useLanguage } from '@/lib/LanguageContext';
 import clsx from 'clsx';
 import { useRouter } from 'next/navigation';
@@ -34,8 +34,11 @@ export default function PollPage({ params }) {
 
     const saved = localStorage.getItem('localVoice_profile');
     if (saved) {
-      setCurrentUser(JSON.parse(saved));
+      try {
+        setCurrentUser(JSON.parse(saved));
+      } catch (e) {}
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const fetchPoll = async () => {
@@ -52,7 +55,6 @@ export default function PollPage({ params }) {
       if (res.ok && data.polls && data.polls.length > 0) {
         let fetchedPoll = data.polls[0];
 
-        // If not logged in, check local storage for guest votes
         if (!userEmail) {
           const guestVotesStr = localStorage.getItem('localVoice_guestVotes');
           if (guestVotesStr) {
@@ -63,7 +65,6 @@ export default function PollPage({ params }) {
           }
         }
 
-        // Auto-set the language context to the poll's default language
         if (fetchedPoll.defaultLanguage) {
           setLanguage(fetchedPoll.defaultLanguage);
         }
@@ -90,7 +91,6 @@ export default function PollPage({ params }) {
   const submitVote = async (optionId, userEmailToSubmit) => {
     if (!poll || poll.hasVoted) return;
 
-    // Optimistic update
     const newOptions = poll.options.map(opt =>
       opt.id === optionId ? { ...opt, votes: opt.votes + 1 } : opt
     );
@@ -112,11 +112,10 @@ export default function PollPage({ params }) {
         })
       });
       if (!res.ok) {
-        fetchPoll(); // Revert
+        fetchPoll();
         const data = await res.json();
         alert(data.error || "Failed to submit vote");
       } else {
-        // Guest local storage
         if (userEmailToSubmit.startsWith('GUEST::')) {
           const savedStr = localStorage.getItem('localVoice_guestVotes');
           const guestVotes = savedStr ? JSON.parse(savedStr) : [];
@@ -163,8 +162,8 @@ export default function PollPage({ params }) {
           pollId: id,
           action: 'comment',
           content: commentInput.trim(),
-          userName: currentUser?.name || 'Guest',
-          userEmail: currentUser?.email || 'guest@localvoice.com'
+          userName: currentUser?.name || 'Resident',
+          userEmail: currentUser?.email || 'guest@localvoice.app'
         })
       });
       const data = await res.json();
@@ -184,35 +183,10 @@ export default function PollPage({ params }) {
     }
   };
 
-  const handleDeleteVote = async (optionId, voterString) => {
-    if (!confirm('Are you sure you want to delete this vote?')) return;
-    try {
-      const res = await fetch('/api/polls', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          pollId: id,
-          action: 'delete_vote',
-          optionId,
-          voterString,
-          requesterEmail: currentUser?.email
-        })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        fetchPoll();
-      } else {
-        alert(data.error || "Failed to delete vote");
-      }
-    } catch (error) {
-      alert("Network error.");
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600 dark:text-sky-500" />
+        <Loader2 className="w-6 h-6 animate-spin text-[var(--accent)]" />
       </div>
     );
   }
@@ -220,36 +194,38 @@ export default function PollPage({ params }) {
   if (!poll) {
     return (
       <div className="text-center py-20 px-4">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Poll Not Found</h1>
-        <p className="text-gray-500 dark:text-gray-400 mb-6">This poll may have been deleted or doesn&apos;t exist.</p>
-        <button onClick={() => router.push('/')} className="text-blue-600 font-medium">Return Home</button>
+        <h1 className="text-[17px] font-semibold text-[var(--text)] mb-2">Poll Not Found</h1>
+        <p className="text-[13px] text-[var(--text-2)] mb-4">This poll may have been removed or does not exist.</p>
+        <button onClick={() => router.push('/feed')} className="text-[13px] font-medium text-[var(--accent)]">
+          Return to Feed
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="max-w-xl mx-auto pt-6 px-4 pb-20 space-y-6">
+    <div className="space-y-4 pb-24">
       <button
         onClick={() => router.back()}
-        className="flex items-center space-x-2 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+        className="flex items-center space-x-1.5 text-[13px] text-[var(--text-2)] hover:text-[var(--text)] transition-colors -ml-1"
       >
-        <ArrowLeft className="w-4 h-4" />
+        <ArrowLeft className="w-4 h-4" strokeWidth={1.5} />
         <span>{t('Back', 'திரும்பிச் செல்')}</span>
       </button>
 
-      <div className="bg-white dark:bg-[#0a0a0a] p-5 md:p-8 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
-        <div className="flex justify-between items-start mb-6">
-          <h1 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white leading-snug">
+      <div className="bg-[var(--surface-1)] p-5 rounded-[var(--r-card)] border border-[var(--hairline)] shadow-[var(--shadow-soft)]">
+        <div className="flex justify-between items-start mb-4">
+          <h1 className="text-[17px] font-semibold text-[var(--text)] leading-snug">
             {poll.question}
           </h1>
           {!poll.isActive && (
-            <span className="ml-3 text-[10px] font-bold px-2.5 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full whitespace-nowrap">
+            <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-[var(--surface-2)] text-[var(--text-3)] whitespace-nowrap ml-2">
               {t('Closed', 'முடிந்தது')}
             </span>
           )}
         </div>
 
-        <div className="space-y-3 mb-6">
+        <div className="space-y-2.5 mb-5">
           {poll.options.map((opt, index) => {
             const percentage = poll.totalVotes > 0 ? Math.round((opt.votes / poll.totalVotes) * 100) : 0;
 
@@ -259,200 +235,100 @@ export default function PollPage({ params }) {
                   onClick={() => poll.isActive && !poll.hasVoted && handleVote(opt.id)}
                   disabled={!poll.isActive || poll.hasVoted}
                   className={clsx(
-                    "w-full flex items-center justify-between p-4 rounded-xl border-2 text-sm font-medium transition-all relative z-10 overflow-hidden",
+                    "w-full min-h-[44px] flex items-center justify-between px-3.5 py-2.5 rounded-[var(--r-control)] text-[13px] font-medium transition-all relative overflow-hidden text-left",
                     poll.hasVoted || !poll.isActive
-                      ? "border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 text-gray-500 dark:text-gray-400"
-                      : "border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-sky-600 hover:bg-blue-50 dark:hover:bg-sky-900/10 text-gray-700 dark:text-gray-300"
+                      ? "bg-[var(--surface-2)] text-[var(--text-2)] cursor-default"
+                      : "bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--surface-3)] active:scale-[0.98]"
                   )}
                 >
                   {(poll.hasVoted || !poll.isActive) && (
                     <div
-                      className="absolute left-0 top-0 bottom-0 z-[-1] rounded-xl transition-all duration-1000 bg-gray-100 dark:bg-gray-800/50"
+                      className="absolute left-0 top-0 bottom-0 rounded-[var(--r-control)] bg-[var(--accent-soft)] transition-all duration-700 pointer-events-none"
                       style={{ width: `${percentage}%` }}
                     />
                   )}
 
-                  <div className="flex items-center">
-                    <span className="font-bold">{index + 1}. {opt.text}</span>
-                  </div>
+                  <span className="relative z-10 flex-1 pr-2 truncate">
+                    {opt.text}
+                  </span>
                   {(poll.hasVoted || !poll.isActive) && (
-                    <span className="font-bold">{percentage}%</span>
+                    <span className="relative z-10 text-[12px] font-semibold text-[var(--text)]">
+                      {percentage}%
+                    </span>
                   )}
                 </button>
-
-                {currentUser?.role === 'super_admin' && opt.voters && opt.voters.length > 0 && (
-                  <div className="mt-2 ml-4 mb-2 space-y-1">
-                    {opt.voters.map((voter, vIdx) => {
-                      let displayName = voter;
-                      if (voter.startsWith('USER::')) {
-                        const parts = voter.split('::');
-                        displayName = parts.length >= 3 ? `${parts[1]} (${parts[2]})` : voter;
-                      } else if (voter.startsWith('GUEST::')) {
-                        const parts = voter.split('::');
-                        displayName = parts.length >= 3 ? `Guest: ${parts[1]} (${parts[2]})` : voter;
-                      }
-                      
-                      return (
-                        <div key={vIdx} className="flex items-center justify-between bg-gray-50 dark:bg-gray-800/50 p-2 rounded-lg text-xs text-gray-600 dark:text-gray-300">
-                          <span>{displayName}</span>
-                          <button
-                            onClick={() => handleDeleteVote(opt.id, voter)}
-                            className="text-red-500 hover:text-red-700 p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
-                            title="Delete Vote"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
               </div>
             );
           })}
         </div>
 
-        <div className="pt-5 border-t border-gray-200 dark:border-gray-800 flex flex-wrap justify-between items-center gap-3">
-          <div className="flex items-center gap-3 text-sm text-gray-500">
-            <span>{poll.totalVotes} {t('votes', 'வாக்குகள்')}</span>
-            <button
-              onClick={handleShare}
-              className="flex items-center space-x-1 text-blue-600 dark:text-sky-400 hover:text-blue-700 dark:hover:text-sky-300 font-medium transition-colors"
-            >
-              {copied ? <CheckCircle className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
-              <span>{copied ? t('Copied', 'நகலெடுக்கப்பட்டது') : t('Share', 'பகிரவும்')}</span>
-            </button>
-          </div>
-          {poll.hasVoted && <span className="text-sm text-blue-800 dark:text-sky-500 font-medium">{t('Vote recorded', 'உங்கள் வாக்கு பதிவானது')}</span>}
+        <div className="pt-3 border-t border-[var(--hairline)] flex justify-between items-center text-[12px] text-[var(--text-2)]">
+          <span>{poll.totalVotes} {t('votes', 'வாக்குகள்')}</span>
+          <button
+            onClick={handleShare}
+            className="flex items-center space-x-1 text-[var(--text-2)] hover:text-[var(--text)] transition-colors p-1"
+          >
+            {copied ? (
+              <>
+                <Check className="w-3.5 h-3.5 text-[var(--accent)]" />
+                <span className="text-[var(--accent)]">{t('Copied', 'நகலானது')}</span>
+              </>
+            ) : (
+              <>
+                <Share2 className="w-3.5 h-3.5" strokeWidth={1.5} />
+                <span>{t('Share', 'பகிர்')}</span>
+              </>
+            )}
+          </button>
         </div>
 
         {/* Comments Section */}
-        <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-800">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">{t('Comments', 'கருத்துக்கள்')}</h3>
+        <div className="mt-6 pt-4 border-t border-[var(--hairline)]">
+          <h3 className="text-[14px] font-semibold text-[var(--text)] mb-3">
+            {t('Comments', 'கருத்துக்கள்')}
+          </h3>
 
-          <div className="flex items-center space-x-2 mb-6">
+          <div className="flex items-center space-x-2 mb-4">
             <input
               type="text"
               placeholder={t("Share your opinion...", "கருத்தை பகிரவும்...")}
               value={commentInput}
               onChange={(e) => setCommentInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') handleCommentSubmit(); }}
-              className="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+              className="flex-1 bg-[var(--surface-2)] text-[var(--text)] rounded-[var(--r-control)] px-3.5 py-2 text-[13px] outline-none focus:ring-2 focus:ring-[var(--accent)] placeholder-[var(--text-3)]"
             />
             <button
               onClick={handleCommentSubmit}
               disabled={isCommenting || !commentInput.trim()}
-              className="bg-blue-600 text-white p-2.5 rounded-full disabled:opacity-50 hover:bg-blue-700 transition-colors"
+              className="w-9 h-9 rounded-full bg-[var(--accent)] text-[var(--accent-contrast)] flex items-center justify-center disabled:opacity-40 hover:bg-[var(--accent-hover)] active:scale-95 transition-all"
             >
-              {isCommenting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
+              {isCommenting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" strokeWidth={2} />}
             </button>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             {poll.comments && poll.comments.length > 0 ? (
               poll.comments.map((comment, idx) => (
-                <div key={idx} className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl rounded-tl-none">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <div className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                      <MessageSquareOff className="w-3 h-3 text-gray-500 dark:text-gray-400" />
-                    </div>
-                    <span className="font-semibold text-sm text-gray-900 dark:text-gray-100">
-                      {comment.authorName ? comment.authorName : t('Anonymous', 'Guest')}
+                <div key={idx} className="bg-[var(--surface-2)] p-3 rounded-[var(--r-control)]">
+                  <div className="flex items-baseline justify-between mb-0.5">
+                    <span className="font-medium text-[12px] text-[var(--text)]">
+                      {comment.authorName || 'Resident'}
                     </span>
-                    <span className="text-[10px] text-gray-500">• {new Date(comment.createdAt).toLocaleDateString()}</span>
+                    <span className="text-[10px] text-[var(--text-3)]">
+                      {new Date(comment.createdAt).toLocaleDateString()}
+                    </span>
                   </div>
-                  <p className="text-sm text-gray-700 dark:text-gray-300 ml-7">{comment.content}</p>
+                  <p className="text-[13px] text-[var(--text-2)]">{comment.content}</p>
                 </div>
               ))
             ) : (
-              <div className="text-center py-6 text-gray-500">
-                <p className="text-sm">{t('No comments yet. Be the first to share your opinion anonymously!', 'இன்னும் கருத்துக்கள் இல்லை. உங்கள் கருத்தை முதலில் பகிரவும்!')}</p>
-              </div>
+              <p className="text-[12px] text-[var(--text-3)] text-center py-3">
+                {t('No comments yet.', 'கருத்துகள் எதுவும் இல்லை.')}
+              </p>
             )}
           </div>
         </div>
       </div>
-
-      {/* Guest Modal */}
-      {mounted && guestModal.isOpen && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-[#0a0a0a] rounded-2xl border border-gray-200 dark:border-gray-800 w-full max-w-sm p-6 shadow-xl animate-in zoom-in-95 duration-200">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-              {t('Vote on this Poll', 'இந்த கருத்துக்கணிப்பில் வாக்களிக்கவும்')}
-            </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
-              {t('Choose how you would like to record your vote.', 'உங்கள் வாக்கை எப்படி பதிவு செய்ய விரும்புகிறீர்கள் என்பதைத் தேர்ந்தெடுக்கவும்.')}
-            </p>
-
-            <button
-              onClick={() => router.push('/profile')}
-              className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-bold text-sm shadow-md transition-all flex justify-center items-center gap-2"
-            >
-              <span>{t('Login to Vote', 'உள்நுழைந்து வாக்களிக்கவும்')}</span>
-              <span className="bg-white/20 text-xs px-2 py-0.5 rounded-full font-medium">
-                {t('Recommended', 'சிறந்தது')}
-              </span>
-            </button>
-
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200 dark:border-gray-800"></div>
-              </div>
-              <div className="relative flex justify-center">
-                <span className="bg-white dark:bg-[#0a0a0a] px-4 text-xs font-medium text-gray-500">
-                  {t('OR VOTE AS GUEST', 'அல்லது விருந்தினராக')}
-                </span>
-              </div>
-            </div>
-
-            <form onSubmit={handleGuestSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t('Name', 'பெயர்')} <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={guestForm.name}
-                  onChange={(e) => setGuestForm({ ...guestForm, name: e.target.value })}
-                  className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
-                  placeholder={t('Enter your name', 'உங்கள் பெயரை உள்ளிடவும்')}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t('Mobile Number', 'மொபைல் எண்')} <span className="text-gray-400 font-normal">({t('Optional', 'விருப்பத் தேர்வு')})</span>
-                </label>
-                <input
-                  type="tel"
-                  value={guestForm.phone}
-                  onChange={(e) => setGuestForm({ ...guestForm, phone: e.target.value })}
-                  className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
-                  placeholder={t('Enter mobile number', 'மொபைல் எண்ணை உள்ளிடவும்')}
-                />
-              </div>
-
-              <div className="flex space-x-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setGuestModal({ isOpen: false, optionId: null })}
-                  className="flex-1 py-2.5 rounded-xl font-medium border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors text-sm"
-                >
-                  {t('Cancel', 'ரத்து செய்')}
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-2.5 rounded-xl font-medium bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors text-sm"
-                >
-                  {t('Submit Vote', 'வாக்களி')}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>,
-        document.body
-      )}
     </div>
   );
 }

@@ -17,7 +17,7 @@ const UserSchema = new mongoose.Schema({
   },
   name: {
     type: String,
-    default: 'Local Voice User',
+    default: 'Kavarappattu Member',
   },
   profilePhoto: {
     type: String,

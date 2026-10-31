@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { User, Mail, Phone, MapPin, Edit3, LogOut, FileText, Settings, Loader2, Camera, Moon, Sun, Languages } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Edit3, LogOut, FileText, Settings, Loader2, Camera, Moon, Sun, Languages, Check, ArrowRight, ShieldCheck } from 'lucide-react';
 import clsx from 'clsx';
 import { useLanguage } from '@/lib/LanguageContext';
 import { useTab } from '@/lib/TabContext';
@@ -44,28 +44,31 @@ export default function ProfilePage() {
   useEffect(() => {
     const saved = localStorage.getItem('localVoice_profile');
     if (saved) {
-      setProfile(JSON.parse(saved));
+      try {
+        setProfile(JSON.parse(saved));
+      } catch (e) {}
     }
   }, []);
 
-  // Sync profile data with backend whenever the Profile tab becomes active
   useEffect(() => {
     if (activeTab === 3) {
       const saved = localStorage.getItem('localVoice_profile');
       if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.email && parsed.isLoggedIn) {
-          fetch(`/api/profile?email=${encodeURIComponent(parsed.email)}`)
-            .then(res => res.json())
-            .then(data => {
-              if (data.success && data.user) {
-                const updatedProfile = { ...parsed, ...data.user };
-                setProfile(updatedProfile);
-                localStorage.setItem('localVoice_profile', JSON.stringify(updatedProfile));
-              }
-            })
-            .catch(err => console.error('Failed to sync profile:', err));
-        }
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed.email && parsed.isLoggedIn) {
+            fetch(`/api/profile?email=${encodeURIComponent(parsed.email)}`)
+              .then(res => res.json())
+              .then(data => {
+                if (data.success && data.user) {
+                  const updatedProfile = { ...parsed, ...data.user };
+                  setProfile(updatedProfile);
+                  localStorage.setItem('localVoice_profile', JSON.stringify(updatedProfile));
+                }
+              })
+              .catch(err => console.error('Failed to sync profile:', err));
+          }
+        } catch (e) {}
       }
     }
   }, [activeTab]);
@@ -134,7 +137,7 @@ export default function ProfilePage() {
         alert(data.error || 'Failed to update profile');
       }
     } catch (err) {
-      alert('Network error while saving profile. Please check your internet connection.');
+      alert('Network error while saving profile.');
     } finally {
       setIsSaving(false);
     }
@@ -200,7 +203,7 @@ export default function ProfilePage() {
           ...profile,
           isLoggedIn: true,
           email: data.user.email,
-          name: data.user.name || 'Local Voice User',
+          name: data.user.name || 'Kavarappattu Member',
           username: data.user.username || '',
           profilePhoto: data.user.profilePhoto || '',
           phone: data.user.phone || '',
@@ -253,247 +256,282 @@ export default function ProfilePage() {
     }
   };
 
+  // Not Logged In View
   if (!profile.isLoggedIn) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[70vh] px-4 space-y-6">
-        <div className="w-20 h-20 bg-blue-50 dark:bg-sky-900/20 border border-blue-200 dark:border-sky-900/50 rounded-full flex items-center justify-center">
-          <User className="w-10 h-10 text-blue-800 dark:text-sky-500" />
-        </div>
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('Welcome to Local Voice', 'உள்ளூர் குரலுக்கு வரவேற்கிறோம்')}</h1>
-          <p className="text-gray-500 mt-2">{t('Join your Kavarappattu community', 'கவரப்பட்டு சமூகத்தில் இணையுங்கள்')}</p>
+      <div className="flex flex-col items-center justify-center min-h-[65vh] px-2 py-6 space-y-6">
+        <div className="w-16 h-16 bg-[var(--surface-2)] text-[var(--text)] rounded-full flex items-center justify-center">
+          <User className="w-8 h-8 text-[var(--text-2)]" strokeWidth={1.5} />
         </div>
 
-        {loginStep === 'EMAIL' ? (
-          <div className="w-full max-w-sm bg-white dark:bg-[#0a0a0a] p-6 rounded-2xl border border-gray-200 dark:border-gray-800 space-y-5 shadow-sm">
-            
-            <div className="flex justify-center">
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={() => setLoginError('Google Login Failed')}
-                useOneTap
-                theme={theme === 'dark' ? 'filled_black' : 'outline'}
-                shape="pill"
-                text="continue_with"
-                width="100%"
-              />
-            </div>
+        <div className="text-center max-w-sm">
+          <h2 className="text-[20px] font-semibold text-[var(--text)] tracking-tight">
+            {t('Join Kavarappattu', 'காவராப்பட்டுவில் இணையுங்கள்')}
+          </h2>
+          <p className="text-[13px] text-[var(--text-2)] mt-1.5 leading-relaxed">
+            {t('Log in to post updates, vote in panchayat polls, and track local issues.', 'ஊர் செய்திகளை பகிரவும், வாக்கெடுப்பில் கலந்துகொள்ளவும் உள்நுழையவும்.')}
+          </p>
+        </div>
 
-            <div className="relative flex py-2 items-center">
-              <div className="flex-grow border-t border-gray-200 dark:border-gray-800"></div>
-              <span className="flex-shrink-0 mx-4 text-gray-400 text-[10px] font-bold uppercase tracking-wider">Or continue with Email</span>
-              <div className="flex-grow border-t border-gray-200 dark:border-gray-800"></div>
+        <div className="w-full max-w-sm bg-[var(--surface-1)] p-5 rounded-[var(--r-card)] border border-[var(--hairline)] shadow-[var(--shadow-soft)] space-y-4">
+          {loginError && (
+            <div className="p-3 bg-red-500/10 text-red-500 text-[13px] rounded-[var(--r-control)] font-medium">
+              {loginError}
             </div>
+          )}
 
-            <form onSubmit={handleSendOtp} className="space-y-4">
+          {loginStep === 'EMAIL' ? (
+            <form onSubmit={handleSendOtp} className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{t('Email Address', 'மின்னஞ்சல் முகவரி')}</label>
+                <label className="block text-[12px] font-medium text-[var(--text-2)] mb-1">
+                  {t('Email Address', 'மின்னஞ்சல் முகவரி')}
+                </label>
                 <input
                   type="email"
+                  required
                   value={emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
-                  className="w-full p-2.5 bg-transparent text-gray-900 dark:text-white border border-gray-200 dark:border-gray-800 rounded-xl focus:border-blue-800 focus:outline-none transition-colors"
-                  placeholder="you@example.com"
-                  required
+                  placeholder="resident@example.com"
+                  className="w-full bg-[var(--surface-2)] text-[var(--text)] rounded-[var(--r-control)] px-3.5 py-2.5 text-[14px] outline-none focus:ring-2 focus:ring-[var(--accent)]"
                 />
               </div>
-              {loginError && <p className="text-red-500 text-xs font-medium">{loginError}</p>}
-              <button type="submit" disabled={isLoading} className="w-full flex items-center justify-center bg-blue-50 dark:bg-sky-900/20 text-blue-800 dark:text-sky-500 border border-blue-200 dark:border-sky-900/50 font-medium py-3 rounded-xl hover:bg-blue-100 dark:hover:bg-sky-900/40 transition-colors disabled:opacity-70">
-                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : t('Send Login Code', 'உள்நுழைவு குறியீட்டை அனுப்பு')}
+
+              <button
+                type="submit"
+                disabled={isLoading || !emailInput}
+                className="w-full min-h-[44px] bg-[var(--accent)] text-[var(--accent-contrast)] hover:bg-[var(--accent-hover)] font-semibold text-[13px] rounded-[var(--r-control)] active:scale-[0.98] transition-all flex items-center justify-center disabled:opacity-50"
+              >
+                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : t('Continue with Email', 'மின்னஞ்சல் மூலம் தொடரவும்')}
               </button>
             </form>
+          ) : (
+            <form onSubmit={handleVerifyOtp} className="space-y-3">
+              <div>
+                <label className="block text-[12px] font-medium text-[var(--text-2)] mb-1">
+                  {t('Enter OTP sent to', 'அனுப்பப்பட்ட OTP எண்')} {emailInput}
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={otpInput}
+                  onChange={(e) => setOtpInput(e.target.value)}
+                  placeholder="6-digit code"
+                  className="w-full bg-[var(--surface-2)] text-[var(--text)] rounded-[var(--r-control)] px-3.5 py-2.5 text-[14px] outline-none focus:ring-2 focus:ring-[var(--accent)] text-center tracking-widest font-mono"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading || !otpInput}
+                className="w-full min-h-[44px] bg-[var(--accent)] text-[var(--accent-contrast)] hover:bg-[var(--accent-hover)] font-semibold text-[13px] rounded-[var(--r-control)] active:scale-[0.98] transition-all flex items-center justify-center disabled:opacity-50"
+              >
+                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : t('Verify & Login', 'உள்நுழைக')}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setLoginStep('EMAIL')}
+                className="w-full text-[12px] text-[var(--text-2)] hover:text-[var(--text)] py-1 text-center"
+              >
+                {t('Change Email', 'வேறு மின்னஞ்சல் பயன்படுத்த')}
+              </button>
+            </form>
+          )}
+
+          <div className="relative py-2">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-[var(--hairline)]" />
+            </div>
+            <div className="relative flex justify-center text-[11px] text-[var(--text-3)] uppercase tracking-wider">
+              <span className="bg-[var(--surface-1)] px-2">{t('Or', 'அல்லது')}</span>
+            </div>
           </div>
-        ) : (
-          <form onSubmit={handleVerifyOtp} className="w-full max-w-sm bg-white dark:bg-[#0a0a0a] p-6 rounded-2xl border border-gray-200 dark:border-gray-800 space-y-4">
-            <div className="text-center mb-2">
-              <p className="text-sm text-gray-500 dark:text-gray-400">Code sent to <strong className="text-gray-900 dark:text-white">{emailInput}</strong></p>
-              <button type="button" onClick={() => setLoginStep('EMAIL')} className="text-xs text-blue-800 dark:text-sky-500 hover:underline mt-1">Change email</button>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{t('Enter 6-Digit OTP', '6 இலக்க OTP-ஐ உள்ளிடவும்')}</label>
-              <input
-                type="text"
-                maxLength={6}
-                value={otpInput}
-                onChange={(e) => setOtpInput(e.target.value)}
-                className="w-full p-2.5 bg-transparent text-gray-900 dark:text-white border border-gray-200 dark:border-gray-800 rounded-xl focus:border-blue-800 focus:outline-none text-center text-xl tracking-widest font-bold transition-colors"
-                placeholder="------"
-                required
-              />
-            </div>
-            {loginError && <p className="text-red-500 text-xs font-medium">{loginError}</p>}
-            <button type="submit" disabled={isLoading} className="w-full flex items-center justify-center bg-blue-50 dark:bg-sky-900/20 text-blue-800 dark:text-sky-500 border border-blue-200 dark:border-sky-900/50 font-medium py-3 rounded-xl hover:bg-blue-100 dark:hover:bg-sky-900/40 transition-colors disabled:opacity-70">
-              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : t('Verify & Login', 'சரிபார்த்து உள்நுழைக')}
-            </button>
-          </form>
-        )}
+
+          <div className="flex justify-center pt-1">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setLoginError('Google sign in failed')}
+              shape="pill"
+              size="medium"
+            />
+          </div>
+        </div>
       </div>
     );
   }
 
+  // Logged In Profile View
   return (
-    <div className="space-y-6">
-      {/* Profile Card */}
-      <div className="bg-white dark:bg-[#0a0a0a] rounded-3xl border border-gray-200 dark:border-gray-800 overflow-hidden transition-colors">
-        <div className="h-32 bg-gradient-to-b from-sky-100 dark:from-sky-900/40 to-transparent"></div>
-        <div className="px-6 pb-6 relative">
-          <div className="flex justify-between items-end -mt-12 mb-4">
-            <div className="relative group">
-              <div className="w-24 h-24 bg-white dark:bg-[#0a0a0a] rounded-full p-1">
-                <div className="w-full h-full bg-blue-50 dark:bg-sky-900/20 rounded-full flex items-center justify-center text-3xl font-bold text-blue-800 dark:text-sky-500 overflow-hidden relative border border-blue-200 dark:border-sky-900/30">
-                  {profile.profilePhoto ? (
-                    <img src={profile.profilePhoto} alt="Profile" className="w-full h-full object-cover" />
-                  ) : (
-                    profile.name.charAt(0)
-                  )}
-                </div>
-              </div>
-              {isEditing && (
-                <label className="absolute bottom-0 right-0 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 p-2 rounded-full border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                  <Camera className="w-4 h-4" />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      const reader = new FileReader();
-                      reader.onload = (event) => {
-                        const img = new Image();
-                        img.onload = () => {
-                          const canvas = document.createElement('canvas');
-                          const MAX_WIDTH = 250;
-                          const MAX_HEIGHT = 250;
-                          let width = img.width;
-                          let height = img.height;
-
-                          if (width > height) {
-                            if (width > MAX_WIDTH) {
-                              height *= MAX_WIDTH / width;
-                              width = MAX_WIDTH;
-                            }
-                          } else {
-                            if (height > MAX_HEIGHT) {
-                              width *= MAX_HEIGHT / height;
-                              height = MAX_HEIGHT;
-                            }
-                          }
-                          canvas.width = width;
-                          canvas.height = height;
-                          const ctx = canvas.getContext('2d');
-                          ctx.drawImage(img, 0, 0, width, height);
-                          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
-                          setProfile(prev => ({ ...prev, profilePhoto: compressedBase64 }));
-                        };
-                        img.src = event.target.result;
-                      };
-                      reader.readAsDataURL(file);
-                    }}
-                  />
-                </label>
+    <div className="space-y-5 pb-24">
+      {/* Profile Header Card */}
+      <div className="bg-[var(--surface-1)] p-5 rounded-[var(--r-card)] border border-[var(--hairline)] shadow-[var(--shadow-soft)]">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center space-x-3.5">
+            <div className="w-14 h-14 rounded-full bg-[var(--surface-2)] text-[var(--text)] flex items-center justify-center font-bold text-lg overflow-hidden flex-shrink-0">
+              {profile.profilePhoto ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={profile.profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                profile.name ? profile.name.charAt(0).toUpperCase() : 'U'
               )}
             </div>
-            {!isEditing && (
-              <button onClick={() => setIsEditing(true)} className="bg-transparent border border-gray-200 dark:border-gray-800 p-2 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors">
-                <Edit3 className="w-5 h-5" />
-              </button>
-            )}
-          </div>
 
-          {isEditing ? (
-            <div className="space-y-3">
-              <input name="name" value={profile.name} onChange={handleChange} className="w-full font-bold text-xl p-2 bg-transparent text-gray-900 dark:text-white border border-gray-200 dark:border-gray-800 rounded-lg focus:border-blue-800 focus:outline-none" />
-              <div>
-                <input name="username" value={profile.username || ''} onChange={handleChange} placeholder="Username (e.g. ragul99)" className={clsx("w-full text-gray-900 dark:text-gray-300 p-2 bg-transparent border rounded-lg focus:outline-none", usernameStatus === 'TAKEN' || usernameStatus === 'INVALID' ? "border-red-200 dark:border-red-900/50 focus:border-red-500 text-red-600 dark:text-red-500" : usernameStatus === 'AVAILABLE' ? "border-blue-300 dark:border-sky-900/50 focus:border-blue-800 text-blue-800 dark:text-sky-500" : "border-gray-200 dark:border-gray-800 focus:border-blue-800")} />
-                {usernameStatus === 'CHECKING' && <p className="text-xs text-blue-800 dark:text-sky-500 mt-1 flex items-center"><Loader2 className="w-3 h-3 animate-spin mr-1"/> Checking availability...</p>}
-                {usernameStatus === 'AVAILABLE' && <p className="text-xs text-blue-800 dark:text-sky-500 mt-1 font-medium">Username is available!</p>}
-                {usernameStatus === 'TAKEN' && <p className="text-xs text-red-500 mt-1 font-medium">Username is already taken.</p>}
-                {usernameStatus === 'INVALID' && <p className="text-xs text-red-500 mt-1 font-medium">3-20 chars, lowercase letters, numbers, underscores only.</p>}
-              </div>
-              <input name="email" type="email" value={profile.email} disabled className="w-full text-gray-500 dark:text-gray-600 p-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg opacity-60 cursor-not-allowed" title="Email cannot be changed" />
-              <input name="phone" value={profile.phone} onChange={handleChange} className="w-full text-gray-900 dark:text-gray-300 p-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg focus:border-blue-800 focus:outline-none" />
-              <input name="address" value={profile.address} onChange={handleChange} className="w-full text-gray-900 dark:text-gray-300 p-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg focus:border-blue-800 focus:outline-none" />
-              <div className="flex space-x-2 pt-2">
-                <button onClick={handleSave} disabled={isSaving} className="flex-1 flex justify-center items-center bg-blue-50 dark:bg-sky-900/20 text-blue-800 dark:text-sky-500 border border-blue-200 dark:border-sky-900/50 font-medium py-2 rounded-xl disabled:opacity-70">
-                  {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : t('Save', 'சேமி')}
-                </button>
-                <button onClick={() => setIsEditing(false)} disabled={isSaving} className="flex-1 bg-transparent border border-gray-200 dark:border-gray-800 text-gray-500 dark:text-gray-400 font-medium py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors disabled:opacity-70">{t('Cancel', 'ரத்து செய்')}</button>
-              </div>
-            </div>
-          ) : (
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{profile.name}</h1>
-              {profile.username && <p className="text-blue-800 dark:text-sky-500 font-medium text-sm mt-1">@{profile.username}</p>}
-              {!profile.username && <p className="text-amber-600 dark:text-amber-500 font-medium text-xs mt-1 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/30 py-1 px-2 rounded-lg inline-block">Set a unique username to post!</p>}
-              <div className="mt-4 space-y-3">
-                <div className="flex items-center text-gray-600 dark:text-gray-400">
-                  <Mail className="w-5 h-5 mr-3 text-gray-500 dark:text-gray-600" />
-                  <span className="text-sm">{profile.email}</span>
-                </div>
-                <div className="flex items-center text-gray-600 dark:text-gray-400">
-                  <Phone className="w-5 h-5 mr-3 text-gray-500 dark:text-gray-600" />
-                  <span className="text-sm">{profile.phone}</span>
-                </div>
-                <div className="flex items-center text-gray-600 dark:text-gray-400">
-                  <MapPin className="w-5 h-5 mr-3 text-gray-500 dark:text-gray-600" />
-                  <span className="text-sm">{profile.address}</span>
-                </div>
-              </div>
+              <h2 className="text-[17px] font-semibold text-[var(--text)] leading-snug">
+                {profile.name || 'Resident'}
+              </h2>
+              <p className="text-[13px] text-[var(--text-2)]">
+                {profile.username ? `@${profile.username}` : t('No username set', 'பயனர்பெயர் இல்லை')}
+              </p>
             </div>
-          )}
-        </div>
-      </div>
+          </div>
 
-      {/* Stats/Activity */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-white dark:bg-[#0a0a0a] p-4 rounded-2xl border border-gray-200 dark:border-gray-800 flex items-center space-x-3 transition-colors">
-          <div className="p-3 bg-blue-50 dark:bg-sky-900/20 text-blue-800 dark:text-sky-500 border border-blue-200 dark:border-sky-900/30 rounded-xl">
-            <FileText className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-xs text-gray-500 font-medium">{t('My Posts', 'என் பதிவுகள்')}</p>
-            <p className="text-xl font-bold text-gray-900 dark:text-white">0</p>
-          </div>
+          <button
+            onClick={() => setIsEditing(!isEditing)}
+            className="px-3 py-1.5 rounded-[var(--r-control)] bg-[var(--surface-2)] hover:bg-[var(--surface-3)] text-[12px] font-medium text-[var(--text)] active:scale-[0.97] transition-all flex items-center space-x-1"
+          >
+            <Edit3 className="w-3.5 h-3.5" strokeWidth={1.5} />
+            <span>{isEditing ? t('Cancel', 'ரத்து') : t('Edit', 'மாற்று')}</span>
+          </button>
         </div>
-        <div className="bg-white dark:bg-[#0a0a0a] p-4 rounded-2xl border border-gray-200 dark:border-gray-800 flex items-center space-x-3 transition-colors">
-          <div className="p-3 bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-500 border border-orange-200 dark:border-orange-900/30 rounded-xl">
-            <Settings className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-xs text-gray-500 font-medium">{t('Complaints', 'புகார்கள்')}</p>
-            <p className="text-xl font-bold text-gray-900 dark:text-white">0</p>
-          </div>
-        </div>
-      </div>
 
-      {/* Settings / Preferences */}
-      <div className="bg-white dark:bg-[#0a0a0a] rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden transition-colors mb-6">
-        <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="w-full flex items-center justify-between p-4 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors border-b border-gray-200 dark:border-gray-800">
-          <div className="flex items-center space-x-3">
-            {mounted && theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            <span className="font-medium">{mounted && theme === 'dark' ? t('Light Mode', 'வெளிச்சம்') : t('Dark Mode', 'இருட்டு')}</span>
-          </div>
-        </button>
-        <button onClick={toggleLanguage} className="w-full flex items-center justify-between p-4 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors">
-          <div className="flex items-center space-x-3">
-            <Languages className="w-5 h-5" />
-            <span className="font-medium">{language === 'en' ? 'தமிழ்' : 'English'}</span>
-          </div>
-        </button>
-      </div>
+        {/* Profile Details or Edit Form */}
+        {isEditing ? (
+          <div className="space-y-3 pt-3 border-t border-[var(--hairline)]">
+            <div>
+              <label className="block text-[11px] font-medium text-[var(--text-2)] mb-1">
+                {t('Full Name', 'முழுப் பெயர்')}
+              </label>
+              <input
+                type="text"
+                name="name"
+                value={profile.name}
+                onChange={handleChange}
+                className="w-full bg-[var(--surface-2)] text-[var(--text)] rounded-[var(--r-control)] px-3.5 py-2 text-[13px] outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              />
+            </div>
 
-      {/* Actions */}
-      <div className="bg-white dark:bg-[#0a0a0a] rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden transition-colors">
-        {(profile.role === 'admin' || profile.role === 'super_admin') && (
-          <a href="/admin" className="w-full flex items-center space-x-3 p-4 text-blue-800 dark:text-sky-500 hover:bg-blue-50 dark:hover:bg-sky-900/10 transition-colors border-b border-gray-200 dark:border-gray-800">
-            <Settings className="w-5 h-5" />
-            <span className="font-medium">{t('Admin Portal', 'நிர்வாகி போர்டல்')}</span>
-          </a>
+            <div>
+              <label className="block text-[11px] font-medium text-[var(--text-2)] mb-1">
+                {t('Username', 'பயனர்பெயர்')}
+              </label>
+              <input
+                type="text"
+                name="username"
+                value={profile.username}
+                onChange={handleChange}
+                placeholder="your_handle"
+                className="w-full bg-[var(--surface-2)] text-[var(--text)] rounded-[var(--r-control)] px-3.5 py-2 text-[13px] outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              />
+              {usernameStatus === 'AVAILABLE' && (
+                <span className="text-[11px] text-emerald-500 mt-1 block">✓ {t('Username is available', 'பயனர்பெயர் கிடைக்கிறது')}</span>
+              )}
+              {usernameStatus === 'TAKEN' && (
+                <span className="text-[11px] text-red-500 mt-1 block">✗ {t('Username is already taken', 'பயனர்பெயர் பயன்பாட்டில் உள்ளது')}</span>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-medium text-[var(--text-2)] mb-1">
+                {t('Phone Number', 'கைபேசி எண்')}
+              </label>
+              <input
+                type="tel"
+                name="phone"
+                value={profile.phone}
+                onChange={handleChange}
+                placeholder="9876543210"
+                className="w-full bg-[var(--surface-2)] text-[var(--text)] rounded-[var(--r-control)] px-3.5 py-2 text-[13px] outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-medium text-[var(--text-2)] mb-1">
+                {t('Address / Street', 'முகவரி / தெரு')}
+              </label>
+              <input
+                type="text"
+                name="address"
+                value={profile.address}
+                onChange={handleChange}
+                placeholder="East Street, Kavarappattu"
+                className="w-full bg-[var(--surface-2)] text-[var(--text)] rounded-[var(--r-control)] px-3.5 py-2 text-[13px] outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              />
+            </div>
+
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="w-full min-h-[44px] bg-[var(--accent)] text-[var(--accent-contrast)] hover:bg-[var(--accent-hover)] font-semibold text-[13px] rounded-[var(--r-control)] active:scale-[0.98] transition-all flex items-center justify-center mt-2"
+            >
+              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : t('Save Changes', 'சேமிக்கவும்')}
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-2 pt-3 border-t border-[var(--hairline)] text-[13px]">
+            <div className="flex items-center space-x-2.5 text-[var(--text-2)] py-1">
+              <Mail className="w-4 h-4 text-[var(--text-3)] flex-shrink-0" strokeWidth={1.5} />
+              <span className="truncate">{profile.email}</span>
+            </div>
+            <div className="flex items-center space-x-2.5 text-[var(--text-2)] py-1">
+              <Phone className="w-4 h-4 text-[var(--text-3)] flex-shrink-0" strokeWidth={1.5} />
+              <span>{profile.phone || t('No phone number added', 'கைபேசி எண் சேர்க்கப்படவில்லை')}</span>
+            </div>
+            <div className="flex items-center space-x-2.5 text-[var(--text-2)] py-1">
+              <MapPin className="w-4 h-4 text-[var(--text-3)] flex-shrink-0" strokeWidth={1.5} />
+              <span>{profile.address || 'Kavarappattu'}</span>
+            </div>
+          </div>
         )}
-        <button onClick={handleLogout} className="w-full flex items-center space-x-3 p-4 text-red-600 dark:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors">
-          <LogOut className="w-5 h-5" />
-          <span className="font-medium">{t('Logout', 'வெளியேறு')}</span>
+      </div>
+
+      {/* App Preferences & Settings Card */}
+      <div className="bg-[var(--surface-1)] p-4 rounded-[var(--r-card)] border border-[var(--hairline)] space-y-1">
+        <h3 className="text-[12px] font-semibold text-[var(--text-3)] uppercase tracking-wider px-2 mb-2">
+          {t('Preferences', 'அமைப்புகள்')}
+        </h3>
+
+        {/* Theme Switcher Button */}
+        <button
+          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          className="w-full min-h-[44px] flex items-center justify-between px-3 py-2.5 rounded-[var(--r-control)] hover:bg-[var(--surface-2)] text-[13px] font-medium text-[var(--text)] transition-colors"
+        >
+          <div className="flex items-center space-x-3">
+            {mounted && theme === 'dark' ? (
+              <Sun className="w-4 h-4 text-[var(--text-2)]" strokeWidth={1.5} />
+            ) : (
+              <Moon className="w-4 h-4 text-[var(--text-2)]" strokeWidth={1.5} />
+            )}
+            <span>{t('Appearance', 'தோற்றம்')}</span>
+          </div>
+          <span className="text-[12px] text-[var(--text-2)]">
+            {mounted && theme === 'dark' ? t('Dark', 'இருட்டு') : t('Light', 'வெளிச்சம்')}
+          </span>
+        </button>
+
+        {/* Language Switcher Button */}
+        <button
+          onClick={toggleLanguage}
+          className="w-full min-h-[44px] flex items-center justify-between px-3 py-2.5 rounded-[var(--r-control)] hover:bg-[var(--surface-2)] text-[13px] font-medium text-[var(--text)] transition-colors"
+        >
+          <div className="flex items-center space-x-3">
+            <Languages className="w-4 h-4 text-[var(--text-2)]" strokeWidth={1.5} />
+            <span>{t('Language', 'மொழி')}</span>
+          </div>
+          <span className="text-[12px] font-semibold text-[var(--accent)]">
+            {language === 'en' ? 'தமிழ்' : 'English'}
+          </span>
+        </button>
+      </div>
+
+      {/* Logout Action */}
+      <div className="pt-2 px-1">
+        <button
+          onClick={handleLogout}
+          className="w-full min-h-[44px] flex items-center justify-center space-x-2 py-2.5 rounded-[var(--r-control)] text-red-500 bg-red-500/10 hover:bg-red-500/15 text-[13px] font-medium transition-colors active:scale-[0.98]"
+        >
+          <LogOut className="w-4 h-4" strokeWidth={1.5} />
+          <span>{t('Log Out', 'வெளியேறு')}</span>
         </button>
       </div>
     </div>

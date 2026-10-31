@@ -1,44 +1,44 @@
+/* eslint-disable @next/next/no-page-custom-font */
 import "./globals.css";
-import Navigation from "@/components/Navigation";
 import Providers from "./Providers";
-
-export const dynamic = 'force-dynamic';
+import AppShell from "@/components/AppShell";
+export const dynamic = "force-dynamic";
 
 export const viewport = {
-  themeColor: "#3b82f6",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FAFAF9" },
+    { media: "(prefers-color-scheme: dark)", color: "#0B0B0C" },
+  ],
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
 };
 
 export const metadata = {
-  title: "Local Voice",
-  description: "Community platform for Kavarappattu village",
+  title: "Kavarappattu",
+  description: "Hyperlocal community platform for Kavarappattu",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Local Voice",
+    title: "Kavarappattu",
   },
 };
 
-import SwipeHandler from "@/components/SwipeHandler";
-import SpaContainer from "@/components/SpaContainer";
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="font-sans bg-gray-50 dark:bg-[#0a0a0a] text-gray-900 dark:text-white transition-colors duration-300 overflow-x-hidden">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="bg-[var(--bg)] text-[var(--text)] transition-colors duration-200 overflow-x-hidden min-h-screen">
         <Providers>
-          <Navigation />
-          <SwipeHandler>
-            <main className="md:ml-64 pb-16 md:pb-0 min-h-screen">
-              <div className="max-w-3xl mx-auto p-4 md:p-8 h-full">
-                <SpaContainer>
-                  {children}
-                </SpaContainer>
-              </div>
-            </main>
-          </SwipeHandler>
+          <AppShell>
+            {children}
+          </AppShell>
         </Providers>
       </body>
     </html>

@@ -39,12 +39,12 @@ export async function POST(request) {
     });
 
     const mailOptions = {
-      from: `"Local Voice Admin" <${process.env.SMTP_USER}>`,
+      from: `"Kavarappattu" <${process.env.SMTP_USER}>`,
       to: email,
-      subject: `Your Login Code for Local Voice`,
+      subject: `Your Login Code for Kavarappattu`,
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; text-align: center;">
-          <h2 style="color: #2563eb;">Local Voice Login</h2>
+          <h2 style="color: #F5A524;">Kavarappattu Login</h2>
           <p>Here is your 6-digit one-time password (OTP) to securely log in to your account. It will expire in 10 minutes.</p>
           <div style="background: #f8fafc; border-radius: 8px; padding: 24px; margin: 20px 0;">
             <p style="font-size: 32px; font-weight: bold; letter-spacing: 4px; color: #1e293b; margin: 0;">${otp}</p>
