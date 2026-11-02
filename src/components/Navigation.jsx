@@ -13,7 +13,7 @@ export default function Navigation() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const { language, toggleLanguage, t } = useLanguage();
-  const { activeTab, switchTab, isSpaMode, spaRoutes } = useTab();
+  const { activeTab, switchTab, isSpaMode, spaRoutes, hasScrolled: tabHasScrolled } = useTab();
 
   const [mounted, setMounted] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
@@ -54,6 +54,8 @@ export default function Navigation() {
     return null;
   }
 
+  const isHeaderElevated = isSpaMode ? tabHasScrolled : hasScrolled;
+
   const allLinks = [
     { name: 'Feed', href: '/feed', icon: Home, ta: 'முகப்பு' },
     { name: 'Announcements', href: '/announcements', icon: Megaphone, ta: 'அறிவிப்பு' },
@@ -90,7 +92,7 @@ export default function Navigation() {
           <header
             className={clsx(
               "md:hidden fixed top-0 left-0 right-0 h-14 z-40 px-4 transition-all duration-200 flex justify-between items-center",
-              hasScrolled
+              isHeaderElevated
                 ? "bg-[var(--bg)]/90 backdrop-blur-xl border-b border-[var(--hairline)]"
                 : "bg-[var(--bg)]/80 backdrop-blur-md"
             )}

@@ -1,17 +1,30 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Megaphone, Plus, Trash2, Loader2, AlertTriangle } from 'lucide-react';
-import clsx from 'clsx';
+import { 
+  Megaphone, 
+  Plus, 
+  Trash2, 
+  Loader2, 
+  AlertTriangle, 
+  Send, 
+  Calendar, 
+  User, 
+  CheckCircle2, 
+  Radio
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useLanguage } from '@/lib/LanguageContext';
 
 export default function AdminAnnouncements() {
+  const { language, t } = useLanguage();
   const [announcements, setAnnouncements] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [hasPermission, setHasPermission] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [filter, setFilter] = useState('ALL');
   
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -29,6 +42,8 @@ export default function AdminAnnouncements() {
       } else {
         router.push('/admin');
       }
+    } else {
+      router.push('/login');
     }
   }, [router]);
 
@@ -37,7 +52,7 @@ export default function AdminAnnouncements() {
       const res = await fetch('/api/announcements');
       const data = await res.json();
       if (res.ok) {
-        setAnnouncements(data.announcements);
+        setAnnouncements(data.announcements || []);
       }
     } catch (error) {
       console.error("Failed to fetch announcements:", error);
@@ -48,7 +63,7 @@ export default function AdminAnnouncements() {
 
   const handleCreate = async (e) => {
     e.preventDefault();
-    if (!title || !content) return;
+    if (!title.trim() || !content.trim()) return;
     
     setIsSubmitting(true);
     try {
@@ -57,8 +72,8 @@ export default function AdminAnnouncements() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           requesterEmail: currentUser.email,
-          title,
-          content,
+          title: title.trim(),
+          content: content.trim(),
           priority
         }),
       });
@@ -69,7 +84,7 @@ export default function AdminAnnouncements() {
         setContent('');
         setPriority('Normal');
       } else {
-        alert(data.error || 'Failed to create announcement');
+        alert(data.error || t('Failed to create announcement', 'அறிவிப்பை உருவாக்க முடியவில்லை'));
       }
     } catch (error) {
       alert("Network error. Please try again.");
@@ -79,7 +94,7 @@ export default function AdminAnnouncements() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this announcement? This cannot be undone.')) return;
+    if (!confirm(t('Are you sure you want to delete this announcement? This cannot be undone.', 'இந்த அறிவிப்பை நீக்க விரும்புகிறீர்களா? இதை மீட்டெடுக்க முடியாது.'))) return;
     
     setDeletingId(id);
     try {
@@ -89,7 +104,7 @@ export default function AdminAnnouncements() {
       if (res.ok) {
         setAnnouncements(announcements.filter(a => a._id !== id));
       } else {
-        alert("Failed to delete announcement");
+        alert(t("Failed to delete announcement", "அறிவிப்பை நீக்க முடியவில்லை"));
       }
     } catch (error) {
       alert("Network error.");
@@ -100,123 +115,236 @@ export default function AdminAnnouncements() {
 
   if (!hasPermission) return null;
 
+  const filteredList = announcements.filter(a => {
+    if (filter === 'ALL') return true;
+    return a.priority === filter;
+  });
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
-          <Megaphone className="w-6 h-6 mr-2 text-blue-500" />
-          Manage Announcements
-        </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Broadcast important information to the entire community.</p>
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[var(--hairline)]">
+        <div>
+          <div className="flex items-center space-x-2.5">
+            <div className="w-8 h-8 rounded-lg bg-[var(--accent)]/15 text-[var(--accent)] flex items-center justify-center">
+              <Megaphone className="w-5 h-5" />
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[var(--text)]">
+              {t('Official Announcements', 'அரசு அறிவிப்புகள் மையம்')}
+            </h1>
+          </div>
+          <p className="text-sm text-[var(--text-2)] mt-1">
+            {t(
+              'Publish high-priority alerts, civic bulletins, and village circulars directly to all citizens.',
+              'முக்கிய அறிவிப்புகள், அவசர எச்சரிக்கைகள் மற்றும் சுற்றறிக்கைகளை மக்களுக்கு வெளியிடவும்.'
+            )}
+          </p>
+        </div>
+
+        <span className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-[var(--surface-1)] border border-[var(--hairline)] text-[var(--text-2)] self-start sm:self-auto">
+          {announcements.length} {t('broadcasts', 'அறிவிப்புகள்')}
+        </span>
       </div>
 
-      <div className="bg-white dark:bg-[#0a0a0a] rounded-2xl p-6 border border-gray-200 dark:border-gray-800 transition-colors">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">New Announcement</h2>
+      {/* New Announcement Form Card */}
+      <div className="bg-[var(--surface-1)] border border-[var(--hairline)] rounded-2xl p-5 sm:p-6 shadow-soft space-y-5">
+        <div className="flex items-center space-x-2 border-b border-[var(--hairline)] pb-3">
+          <div className="w-7 h-7 rounded-lg bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center">
+            <Plus className="w-4 h-4" />
+          </div>
+          <h2 className="text-base font-bold text-[var(--text)]">
+            {t('Compose New Announcement', 'புதிய அறிவிப்பை வெளியிடு')}
+          </h2>
+        </div>
+
         <form onSubmit={handleCreate} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
+          {/* Title */}
+          <div className="space-y-1.5">
+            <label className="block text-xs font-bold text-[var(--text-2)] uppercase tracking-wider">
+              {t('Announcement Headline', 'தலைப்பு')}
+            </label>
             <input 
               type="text" 
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full bg-transparent border border-gray-200 dark:border-gray-800 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-              placeholder="e.g., Water Supply Interruption"
+              placeholder={t('e.g., Scheduled Power Maintenance / VAO Camp', 'எ.கா: மின்சார பராமரிப்பு பணி / VAO முகாம்')}
+              className="w-full px-4 py-2.5 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] text-sm text-[var(--text)] placeholder-[var(--text-3)] focus:border-[var(--accent)] outline-none transition-colors"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Message Content</label>
+
+          {/* Content */}
+          <div className="space-y-1.5">
+            <label className="block text-xs font-bold text-[var(--text-2)] uppercase tracking-wider">
+              {t('Notice Details', 'முழு விவரம்')}
+            </label>
             <textarea 
               required
               rows={4}
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="w-full bg-transparent border border-gray-200 dark:border-gray-800 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none"
-              placeholder="Provide full details here..."
+              placeholder={t('Specify locations, dates, affected areas, and official department guidance...', 'தேதிகள், இடங்கள், துறை வழிகாட்டுதல் மற்றும் முழு விவரங்களை உள்ளிடவும்...')}
+              className="w-full px-4 py-2.5 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] text-sm text-[var(--text)] placeholder-[var(--text-3)] focus:border-[var(--accent)] outline-none transition-colors resize-none leading-relaxed"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Priority Level</label>
-            <div className="flex space-x-4">
-              <label className="flex items-center space-x-2 cursor-pointer">
-                <input 
-                  type="radio" 
-                  name="priority" 
-                  value="Normal" 
-                  checked={priority === 'Normal'}
-                  onChange={() => setPriority('Normal')}
-                  className="w-4 h-4 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-sm text-gray-700 dark:text-gray-300">Normal</span>
-              </label>
-              <label className="flex items-center space-x-2 cursor-pointer">
-                <input 
-                  type="radio" 
-                  name="priority" 
-                  value="High" 
-                  checked={priority === 'High'}
-                  onChange={() => setPriority('High')}
-                  className="w-4 h-4 text-red-600 focus:ring-red-500"
-                />
-                <span className="text-sm font-medium text-red-600 dark:text-red-400">High (Alert)</span>
-              </label>
+
+          {/* Priority Level Selector */}
+          <div className="space-y-1.5">
+            <label className="block text-xs font-bold text-[var(--text-2)] uppercase tracking-wider">
+              {t('Urgency Level', 'முக்கியத்துவ நிலை')}
+            </label>
+            <div className="grid grid-cols-2 gap-3 sm:max-w-md">
+              <button
+                type="button"
+                onClick={() => setPriority('Normal')}
+                className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between ${
+                  priority === 'Normal'
+                    ? 'bg-[var(--accent)]/15 border-[var(--accent)] text-[var(--text)] font-semibold shadow-sm'
+                    : 'bg-[var(--surface-2)] border-[var(--hairline)] text-[var(--text-2)] hover:border-[var(--accent)]/30'
+                }`}
+              >
+                <div>
+                  <span className="text-xs font-bold block">{t('Normal Bulletin', 'வழக்கமான அறிவிப்பு')}</span>
+                  <span className="text-[11px] text-[var(--text-3)] block mt-0.5">{t('General updates & circulars', 'பொது தகவல்கள்')}</span>
+                </div>
+                {priority === 'Normal' && <CheckCircle2 className="w-4 h-4 text-[var(--accent)] flex-shrink-0" />}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPriority('High')}
+                className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between ${
+                  priority === 'High'
+                    ? 'bg-red-500/15 border-red-500 text-red-600 dark:text-red-400 font-semibold shadow-sm'
+                    : 'bg-[var(--surface-2)] border-[var(--hairline)] text-[var(--text-2)] hover:border-red-500/30'
+                }`}
+              >
+                <div>
+                  <span className="text-xs font-bold block flex items-center">
+                    <AlertTriangle className="w-3.5 h-3.5 mr-1 text-red-500" />
+                    {t('High Alert', 'அவசர எச்சரிக்கை')}
+                  </span>
+                  <span className="text-[11px] text-[var(--text-3)] block mt-0.5">{t('Emergencies & warnings', 'முக்கிய எச்சரிக்கை')}</span>
+                </div>
+                {priority === 'High' && <CheckCircle2 className="w-4 h-4 text-red-500 flex-shrink-0" />}
+              </button>
             </div>
           </div>
-          <div className="pt-2">
+
+          <div className="pt-2 flex justify-end">
             <button 
               type="submit" 
               disabled={isSubmitting}
-              className="bg-blue-600 dark:bg-sky-500 text-white px-6 py-2.5 rounded-xl font-medium flex items-center justify-center hover:bg-blue-700 dark:hover:bg-sky-600 transition-colors disabled:opacity-70"
+              className="px-6 py-2.5 rounded-xl text-sm font-bold bg-[var(--accent)] text-[var(--accent-contrast)] hover:bg-[var(--accent-hover)] transition-all shadow-md shadow-amber-500/10 flex items-center space-x-2 disabled:opacity-70"
             >
-              {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Plus className="w-5 h-5 mr-2" /> Publish Announcement</>}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>{t('Broadcasting...', 'வெளியிடப்படுகிறது...')}</span>
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4" />
+                  <span>{t('Publish Broadcast', 'அறிவிப்பை வெளியிடு')}</span>
+                </>
+              )}
             </button>
           </div>
         </form>
       </div>
 
+      {/* Broadcast History */}
       <div className="space-y-4">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Broadcast History</h2>
-        {isLoading ? (
-          <div className="flex justify-center p-8">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        <div className="flex items-center justify-between">
+          <h2 className="text-base sm:text-lg font-bold text-[var(--text)]">
+            {t('Broadcast History', 'வெளியிடப்பட்ட அறிவிப்புகள்')}
+          </h2>
+
+          <div className="flex items-center space-x-1.5">
+            {[
+              { id: 'ALL', label: t('All', 'அனைத்தும்') },
+              { id: 'High', label: t('High Alert', 'அவசரம்') },
+              { id: 'Normal', label: t('Normal', 'வழக்கமானவை') },
+            ].map(f => (
+              <button
+                key={f.id}
+                onClick={() => setFilter(f.id)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                  filter === f.id
+                    ? 'bg-[var(--accent)] text-[var(--accent-contrast)] shadow-sm'
+                    : 'bg-[var(--surface-1)] border border-[var(--hairline)] text-[var(--text-2)] hover:text-[var(--text)]'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
           </div>
-        ) : announcements.length === 0 ? (
-          <p className="text-gray-500 dark:text-gray-400 text-sm">No announcements published yet.</p>
+        </div>
+
+        {isLoading ? (
+          <div className="flex justify-center p-12">
+            <Loader2 className="w-8 h-8 animate-spin text-[var(--accent)]" />
+          </div>
+        ) : filteredList.length === 0 ? (
+          <div className="bg-[var(--surface-1)] border border-[var(--hairline)] rounded-2xl p-8 text-center text-xs text-[var(--text-3)] shadow-soft">
+            {t('No announcements found.', 'அறிவிப்புகள் எதுவும் இல்லை.')}
+          </div>
         ) : (
-          announcements.map((ann) => (
-            <div key={ann._id} className={clsx(
-              "p-4 rounded-xl border",
-              ann.priority === 'High' ? "bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-900/30" : "bg-white dark:bg-[#0a0a0a] border-gray-200 dark:border-gray-800 transition-colors"
-            )}>
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="font-bold text-gray-900 dark:text-gray-100">
-                  {ann.priority === 'High' && <AlertTriangle className="inline w-4 h-4 mr-1.5 mb-0.5 text-red-500" />}
-                  {ann.title}
-                </h3>
-                <span className="text-xs text-gray-500">{new Date(ann.createdAt).toLocaleDateString()}</span>
-              </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{ann.content}</p>
-              <div className="mt-3 flex justify-between items-center text-xs text-gray-500">
-                <span>By {ann.author}</span>
-                <span className={clsx(
-                  "px-2 py-0.5 rounded-md font-medium",
-                  ann.priority === 'High' ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" : "bg-blue-50 text-blue-800 dark:bg-sky-900/20 dark:text-sky-500"
-                )}>{ann.priority}</span>
-              </div>
-              {currentUser?.role === 'super_admin' && (
-                <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 flex justify-end">
-                  <button
-                    onClick={() => handleDelete(ann._id)}
-                    disabled={deletingId === ann._id}
-                    className="flex items-center space-x-1 text-xs text-red-500 hover:text-red-600 font-medium disabled:opacity-50"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>Delete</span>
-                  </button>
+          <div className="space-y-3">
+            {filteredList.map(ann => {
+              const isHigh = ann.priority === 'High';
+              const isDeleting = deletingId === ann._id;
+
+              return (
+                <div 
+                  key={ann._id}
+                  className={`p-5 rounded-2xl border transition-all space-y-3 shadow-soft ${
+                    isHigh 
+                      ? 'bg-red-500/10 border-red-500/30' 
+                      : 'bg-[var(--surface-1)] border-[var(--hairline)]'
+                  }`}
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center space-x-2">
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        isHigh
+                          ? 'bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/30'
+                          : 'bg-[var(--accent)]/15 text-[var(--accent)] border border-[var(--accent)]/30'
+                      }`}>
+                        {isHigh ? t('High Alert', 'அவசர எச்சரிக்கை') : t('Normal Notice', 'வழக்கமான அறிவிப்பு')}
+                      </span>
+                      <h3 className="font-bold text-base text-[var(--text)]">
+                        {ann.title}
+                      </h3>
+                    </div>
+
+                    <div className="flex items-center space-x-3 text-xs text-[var(--text-3)]">
+                      <span className="flex items-center"><Calendar className="w-3.5 h-3.5 mr-1" /> {new Date(ann.createdAt).toLocaleDateString()}</span>
+                      <span>•</span>
+                      <span className="flex items-center"><User className="w-3.5 h-3.5 mr-1" /> {ann.author}</span>
+                    </div>
+                  </div>
+
+                  <p className="text-xs sm:text-sm text-[var(--text-2)] leading-relaxed whitespace-pre-line">
+                    {ann.content}
+                  </p>
+
+                  {currentUser?.role === 'super_admin' && (
+                    <div className="pt-2 border-t border-[var(--hairline)] flex justify-end">
+                      <button
+                        onClick={() => handleDelete(ann._id)}
+                        disabled={isDeleting}
+                        className="flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-red-500 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                      >
+                        {isDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                        <span>{t('Delete Broadcast', 'நீக்கு')}</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          ))
+              );
+            })}
+          </div>
         )}
       </div>
     </div>

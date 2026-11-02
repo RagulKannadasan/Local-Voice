@@ -2,6 +2,7 @@
 import "./globals.css";
 import Providers from "./Providers";
 import AppShell from "@/components/AppShell";
+import ScrollToTop from "@/components/ScrollToTop";
 export const dynamic = "force-dynamic";
 
 export const viewport = {
@@ -36,6 +37,7 @@ export default function RootLayout({ children }) {
       </head>
       <body className="bg-[var(--bg)] text-[var(--text)] transition-colors duration-200 overflow-x-hidden min-h-screen">
         <Providers>
+          <ScrollToTop />
           <AppShell>
             {children}
           </AppShell>

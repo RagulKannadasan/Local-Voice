@@ -12,15 +12,18 @@ export default function SwipeHandler({ children }) {
   const minSwipeDistance = 50;
 
   const onTouchStart = (e) => {
+    if (typeof window !== 'undefined' && window.innerWidth >= 768) return;
     setTouchEnd(null);
     setTouchStart({ x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY });
   };
 
   const onTouchMove = (e) => {
+    if (typeof window !== 'undefined' && window.innerWidth >= 768) return;
     setTouchEnd({ x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY });
   };
 
   const onTouchEnd = () => {
+    if (typeof window !== 'undefined' && window.innerWidth >= 768) return;
     if (!touchStart || !touchEnd || !isSpaMode) return;
     
     const distanceX = touchStart.x - touchEnd.x;

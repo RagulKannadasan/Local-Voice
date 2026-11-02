@@ -1,11 +1,28 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { BarChart2, Plus, Trash2, Loader2, PlayCircle, Share2, CheckCircle, XCircle, Download, Mail } from 'lucide-react';
-import clsx from 'clsx';
+import { 
+  BarChart2, 
+  Plus, 
+  Trash2, 
+  Loader2, 
+  PlayCircle, 
+  Share2, 
+  CheckCircle2, 
+  XCircle, 
+  Download, 
+  Mail, 
+  Users, 
+  Check, 
+  Calendar,
+  Vote,
+  Sparkles
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useLanguage } from '@/lib/LanguageContext';
 
 export default function AdminPolls() {
+  const { language, t } = useLanguage();
   const [polls, setPolls] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -37,7 +54,7 @@ export default function AdminPolls() {
         router.push('/admin');
       }
     } else {
-      router.push('/');
+      router.push('/login');
     }
   }, [router]);
 
@@ -52,7 +69,7 @@ export default function AdminPolls() {
       const res = await fetch(`/api/polls?requesterEmail=${userEmail}`);
       const data = await res.json();
       if (res.ok) {
-        setPolls(data.polls);
+        setPolls(data.polls || []);
       }
     } catch (error) {
       console.error("Failed to fetch polls:", error);
@@ -62,12 +79,12 @@ export default function AdminPolls() {
   };
 
   const handleAddOption = () => {
-    if (options.length >= 6) return; // Limit to 6 options max
+    if (options.length >= 6) return;
     setOptions([...options, { id: Date.now().toString(), text: '' }]);
   };
 
   const handleRemoveOption = (id) => {
-    if (options.length <= 2) return; // Minimum 2 options required
+    if (options.length <= 2) return;
     setOptions(options.filter(opt => opt.id !== id));
   };
 
@@ -78,8 +95,8 @@ export default function AdminPolls() {
   const handleCreate = async (e) => {
     e.preventDefault();
     const validOptions = options.filter(opt => opt.text.trim() !== '');
-    if (!question || validOptions.length < 2) {
-      alert("Please enter a question and at least 2 options.");
+    if (!question.trim() || validOptions.length < 2) {
+      alert(t("Please enter a question and at least 2 options.", "கேள்வி மற்றும் குறைந்தது 2 விருப்பங்களை உள்ளிடவும்."));
       return;
     }
     
@@ -90,7 +107,7 @@ export default function AdminPolls() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           requesterEmail: currentUser.email,
-          question,
+          question: question.trim(),
           defaultLanguage,
           sendEmail,
           options: validOptions
@@ -101,11 +118,12 @@ export default function AdminPolls() {
         setPolls([data.poll, ...polls]);
         setQuestion('');
         setOptions([
-          { id: Date.now().toString() + '1', text: '' },
-          { id: Date.now().toString() + '2', text: '' }
+          { id: '1', text: '' },
+          { id: '2', text: '' }
         ]);
+        setSendEmail(false);
       } else {
-        alert(data.error || 'Failed to create poll');
+        alert(data.error || t('Failed to create poll', 'கருத்துக்கணிப்பை உருவாக்க முடியவில்லை'));
       }
     } catch (error) {
       alert("Network error. Please try again.");
@@ -115,7 +133,7 @@ export default function AdminPolls() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this poll? This cannot be undone.')) return;
+    if (!confirm(t('Are you sure you want to delete this poll? This will permanently delete all votes.', 'இந்த கருத்துக்கணிப்பை நீக்க விரும்புகிறீர்களா? அனைத்து வாக்குகளும் நீக்கப்படும்.'))) return;
     
     setDeletingId(id);
     try {
@@ -125,7 +143,7 @@ export default function AdminPolls() {
       if (res.ok) {
         setPolls(polls.filter(p => (p.id || p._id) !== id));
       } else {
-        alert("Failed to delete poll");
+        alert(t("Failed to delete poll", "கருத்துக்கணிப்பை நீக்க முடியவில்லை"));
       }
     } catch (error) {
       alert("Network error.");
@@ -135,25 +153,22 @@ export default function AdminPolls() {
   };
 
   const handleToggleStatus = async (id, currentStatus) => {
-    const actionText = currentStatus ? 'close' : 're-open';
-    if (!confirm(`Are you sure you want to ${actionText} this poll?`)) return;
-
     setTogglingId(id);
     try {
       const res = await fetch('/api/polls', {
-        method: 'PATCH',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           pollId: id,
-          requesterEmail: currentUser.email,
-          isActive: !currentStatus
+          action: 'toggle_status',
+          requesterEmail: currentUser.email
         })
       });
       const data = await res.json();
       if (res.ok) {
         setPolls(polls.map(p => (p.id || p._id) === id ? { ...p, isActive: data.isActive } : p));
       } else {
-        alert("Failed to update poll status");
+        alert(t("Failed to update poll status", "நிலையை மாற்ற முடியவில்லை"));
       }
     } catch (error) {
       alert("Network error.");
@@ -170,7 +185,7 @@ export default function AdminPolls() {
   };
 
   const handleSendEmailNotification = async (id) => {
-    if (!confirm('Are you sure you want to broadcast an email notification for this poll to all users?')) return;
+    if (!confirm(t('Are you sure you want to broadcast an email notification for this poll to all users?', 'அனைத்து பயனர்களுக்கும் இந்த கருத்துக்கணிப்பு குறித்த மின்னஞ்சல் அனுப்ப விரும்புகிறீர்களா?'))) return;
     
     setSendingEmailId(id);
     try {
@@ -185,9 +200,9 @@ export default function AdminPolls() {
       });
       const data = await res.json();
       if (res.ok) {
-        alert("Emails are being sent in the background!");
+        alert(t("Emails are being sent in the background!", "மின்னஞ்சல்கள் பின்னணியில் அனுப்பப்படுகின்றன!"));
       } else {
-        alert(data.error || "Failed to send email");
+        alert(data.error || t("Failed to send email", "மின்னஞ்சல் அனுப்புவதில் தோல்வி"));
       }
     } catch (error) {
       alert("Network error.");
@@ -218,7 +233,6 @@ export default function AdminPolls() {
             displayVoter = parts[1] || 'User';
             contactInfo = parts[2] || '';
           } else {
-            // Legacy fallback
             displayVoter = voter;
             contactInfo = voter;
           }
@@ -254,9 +268,9 @@ export default function AdminPolls() {
         })
       });
       if (res.ok) {
-        alert("Test email sent to " + currentUser.email + "!");
+        alert(t(`Test email sent to ${currentUser.email}!`, `${currentUser.email} முகவரிக்கு சோதனை மின்னஞ்சல் அனுப்பப்பட்டது!`));
       } else {
-        alert("Failed to send test email");
+        alert(t("Failed to send test email", "சோதனை மின்னஞ்சல் அனுப்ப முடியவில்லை"));
       }
     } catch (error) {
       alert("Network error while sending test email.");
@@ -267,242 +281,341 @@ export default function AdminPolls() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[var(--hairline)]">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
-            <BarChart2 className="w-6 h-6 mr-2 text-blue-500" />
-            Manage Polls
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Create community polls to gather public opinion.</p>
+          <div className="flex items-center space-x-2.5">
+            <div className="w-8 h-8 rounded-lg bg-[var(--accent)]/15 text-[var(--accent)] flex items-center justify-center">
+              <Vote className="w-5 h-5" />
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[var(--text)]">
+              {t('Civic Polls & Consensus', 'கருத்துக் கணிப்பு மையம்')}
+            </h1>
+          </div>
+          <p className="text-sm text-[var(--text-2)] mt-1">
+            {t(
+              'Conduct community surveys, inspect voter transparency, and export CSV audit sheets.',
+              'கிராம கருத்துக்கணிப்புகளை உருவாக்கி, வாக்குகளின் வெளிப்படைத்தன்மையை கண்காணிக்கவும்.'
+            )}
+          </p>
         </div>
-        <button
-          onClick={handleTestEmail}
-          className="flex items-center text-sm bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 px-4 py-2 rounded-xl hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors font-medium"
-        >
-          <Mail className="w-4 h-4 mr-2" />
-          Test Email Config
-        </button>
+
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={handleTestEmail}
+            className="flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-[var(--surface-1)] border border-[var(--hairline)] text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+          >
+            <Mail className="w-3.5 h-3.5 text-[var(--accent)]" />
+            <span>{t('Test Email SMTP', 'மின்னஞ்சல் சோதனை')}</span>
+          </button>
+          <span className="text-xs font-semibold px-3 py-2 rounded-xl bg-[var(--surface-1)] border border-[var(--hairline)] text-[var(--text-2)]">
+            {polls.length} {t('polls', 'கணிப்புகள்')}
+          </span>
+        </div>
       </div>
 
-      <div className="bg-white dark:bg-[#0a0a0a] rounded-2xl p-6 border border-gray-200 dark:border-gray-800 transition-colors">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">New Poll</h2>
+      {/* New Poll Card */}
+      <div className="bg-[var(--surface-1)] border border-[var(--hairline)] rounded-2xl p-5 sm:p-6 shadow-soft space-y-5">
+        <div className="flex items-center space-x-2 border-b border-[var(--hairline)] pb-3">
+          <div className="w-7 h-7 rounded-lg bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center">
+            <Plus className="w-4 h-4" />
+          </div>
+          <h2 className="text-base font-bold text-[var(--text)]">
+            {t('Launch New Civic Poll', 'புதிய கருத்துக் கணிப்பை உருவாக்கு')}
+          </h2>
+        </div>
+
         <form onSubmit={handleCreate} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Poll Question</label>
+          {/* Question */}
+          <div className="space-y-1.5">
+            <label className="block text-xs font-bold text-[var(--text-2)] uppercase tracking-wider">
+              {t('Poll Question / Proposal', 'கருத்துக்கணிப்பு கேள்வி')}
+            </label>
             <input 
               type="text" 
               required
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              className="w-full bg-transparent border border-gray-200 dark:border-gray-800 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-              placeholder="e.g., What should we name the new park?"
+              placeholder={t('e.g., Should we install solar street lights along North Street?', 'எ.கா: வடக்குத் தெருவில் சோலார் மின்விளக்குகள் பொருத்தலாமா?')}
+              className="w-full px-4 py-2.5 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] text-sm text-[var(--text)] placeholder-[var(--text-3)] focus:border-[var(--accent)] outline-none transition-colors"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Default Display Language</label>
+          {/* Display Language */}
+          <div className="space-y-1.5">
+            <label className="block text-xs font-bold text-[var(--text-2)] uppercase tracking-wider">
+              {t('Primary Language', 'முதன்மை மொழி')}
+            </label>
             <select
               value={defaultLanguage}
               onChange={(e) => setDefaultLanguage(e.target.value)}
-              className="w-full bg-transparent border border-gray-200 dark:border-gray-800 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-900 dark:text-gray-100"
+              className="w-full sm:max-w-xs px-3.5 py-2 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] text-xs font-semibold text-[var(--text)] focus:border-[var(--accent)] outline-none transition-colors"
             >
               <option value="en">English</option>
               <option value="ta">Tamil (தமிழ்)</option>
             </select>
           </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Options (Min 2, Max 6)</label>
+
+          {/* Dynamic Options */}
+          <div className="space-y-2">
+            <label className="block text-xs font-bold text-[var(--text-2)] uppercase tracking-wider">
+              {t('Voting Options (2 to 6)', 'வாக்கு விருப்பங்கள் (2 முதல் 6)')}
+            </label>
             <div className="space-y-2">
               {options.map((opt, index) => (
                 <div key={opt.id} className="flex items-center space-x-2">
+                  <span className="w-6 text-center text-xs font-bold text-[var(--text-3)]">
+                    {index + 1}.
+                  </span>
                   <input 
                     type="text" 
-                    required={index < 2} // First two are required
+                    required={index < 2}
                     value={opt.text}
                     onChange={(e) => handleOptionChange(opt.id, e.target.value)}
-                    className="flex-1 bg-transparent border border-gray-200 dark:border-gray-800 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                    placeholder={`Option ${index + 1}`}
+                    placeholder={`${t('Option', 'விருப்பம்')} ${index + 1}`}
+                    className="flex-1 px-3.5 py-2 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] text-xs text-[var(--text)] placeholder-[var(--text-3)] focus:border-[var(--accent)] outline-none transition-colors"
                   />
                   {options.length > 2 && (
                     <button 
                       type="button" 
                       onClick={() => handleRemoveOption(opt.id)}
-                      className="p-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"
+                      className="p-2 text-red-500 hover:bg-red-500/10 rounded-xl transition-colors"
                     >
-                      <Trash2 className="w-5 h-5" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   )}
                 </div>
               ))}
             </div>
-            
+
             {options.length < 6 && (
               <button 
                 type="button" 
                 onClick={handleAddOption}
-                className="mt-3 flex items-center text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+                className="mt-2 inline-flex items-center space-x-1 text-xs font-semibold text-[var(--accent)] hover:underline"
               >
-                <Plus className="w-4 h-4 mr-1" /> Add Option
+                <Plus className="w-3.5 h-3.5" />
+                <span>{t('Add Another Option', 'கூடுதல் விருப்பம் சேர்க்க')}</span>
               </button>
             )}
           </div>
 
-          <div className="flex items-center space-x-2 pt-2">
+          {/* Email Broadcast Switch */}
+          <div className="pt-2 flex items-center space-x-2.5">
             <input 
               type="checkbox" 
               id="sendEmail" 
               checked={sendEmail} 
               onChange={(e) => setSendEmail(e.target.checked)} 
-              className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+              className="w-4 h-4 accent-[var(--accent)] rounded cursor-pointer"
             />
-            <label htmlFor="sendEmail" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Send Email Notification to All Users
+            <label htmlFor="sendEmail" className="text-xs font-medium text-[var(--text-2)] cursor-pointer">
+              {t('Broadcast email alert to all registered village members upon publish', 'அனைத்து பயனர்களுக்கும் உடனடி மின்னஞ்சல் அறிவிப்பை அனுப்பவும்')}
             </label>
           </div>
 
-          <div className="pt-4">
+          {/* Submit */}
+          <div className="pt-2 flex justify-end">
             <button 
               type="submit" 
               disabled={isSubmitting}
-              className="bg-blue-600 dark:bg-sky-500 text-white px-6 py-2.5 rounded-xl font-medium flex items-center justify-center hover:bg-blue-700 dark:hover:bg-sky-600 transition-colors disabled:opacity-70"
+              className="px-6 py-2.5 rounded-xl text-sm font-bold bg-[var(--accent)] text-[var(--accent-contrast)] hover:bg-[var(--accent-hover)] transition-all shadow-md shadow-amber-500/10 flex items-center space-x-2 disabled:opacity-70"
             >
-              {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><PlayCircle className="w-5 h-5 mr-2" /> Publish Poll</>}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>{t('Publishing Poll...', 'வெளியிடப்படுகிறது...')}</span>
+                </>
+              ) : (
+                <>
+                  <PlayCircle className="w-4 h-4" />
+                  <span>{t('Launch Poll', 'கருத்துக்கணிப்பைத் தொடங்கு')}</span>
+                </>
+              )}
             </button>
           </div>
         </form>
       </div>
 
+      {/* Active Polls List */}
       <div className="space-y-4">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Active Polls</h2>
+        <h2 className="text-base sm:text-lg font-bold text-[var(--text)]">
+          {t('Community Polls Ledger', 'கருத்துக் கணிப்புகள் பட்டியல்')}
+        </h2>
+
         {isLoading ? (
-          <div className="flex justify-center p-8">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+          <div className="flex justify-center p-12">
+            <Loader2 className="w-8 h-8 animate-spin text-[var(--accent)]" />
           </div>
         ) : polls.length === 0 ? (
-          <p className="text-gray-500 dark:text-gray-400 text-sm">No active polls found.</p>
+          <div className="bg-[var(--surface-1)] border border-[var(--hairline)] rounded-2xl p-8 text-center text-xs text-[var(--text-3)] shadow-soft">
+            {t('No community polls found.', 'கருத்துக்கணிப்புகள் எதுவும் இல்லை.')}
+          </div>
         ) : (
-          polls.map((poll) => (
-            <div key={poll.id || poll._id} className="p-5 bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 rounded-xl transition-colors">
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex items-start space-x-3">
-                  <h3 className="font-bold text-gray-900 dark:text-gray-100 text-lg">{poll.question}</h3>
-                  {!poll.isActive && (
-                    <span className="text-[10px] font-bold px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full whitespace-nowrap mt-1">
-                      Closed
-                    </span>
-                  )}
-                </div>
-                <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                  {poll.totalVotes} Votes
-                </span>
-              </div>
-              <div className="space-y-3">
-                {poll.options.map(opt => {
-                  const percentage = poll.totalVotes > 0 ? Math.round((opt.votes / poll.totalVotes) * 100) : 0;
-                  return (
-                    <div key={opt.id} className="relative">
-                      <div className="flex justify-between text-sm mb-1">
-                        <span className="font-medium text-gray-700 dark:text-gray-300">{opt.text}</span>
-                        <span className="text-gray-500 dark:text-gray-400">{percentage}% ({opt.votes})</span>
-                      </div>
-                      <div className="w-full bg-gray-100 dark:bg-gray-800/50 rounded-full h-2 mb-1">
-                        <div 
-                          className="bg-blue-500 h-2 rounded-full transition-all duration-500" 
-                          style={{ width: `${percentage}%` }}
-                        />
-                      </div>
-                      {opt.voters && opt.voters.length > 0 && (
-                        <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/50 p-2 rounded-lg mt-2 border border-gray-200 dark:border-gray-800">
-                          <span className="font-medium text-gray-700 dark:text-gray-300">Voters:</span>
-                          <ul className="mt-1 space-y-0.5 max-h-32 overflow-y-auto">
-                            {opt.voters.map((voter, idx) => {
-                              let isGuest = false;
-                              let displayVoter = voter;
-                              let guestPhone = '';
-                              
-                              if (voter.startsWith('GUEST::')) {
-                                const parts = voter.split('::');
-                                isGuest = true;
-                                displayVoter = parts[1] || 'Unknown Guest';
-                                guestPhone = parts[2] && parts[2] !== 'N/A' ? parts[2] : '';
-                              } else if (voter.startsWith('USER::')) {
-                                const parts = voter.split('::');
-                                displayVoter = parts[1] || 'User';
-                                guestPhone = parts[2] || '';
-                              }
+          <div className="space-y-4">
+            {polls.map((poll) => {
+              const pollId = poll.id || poll._id;
+              const isDeleting = deletingId === pollId;
+              const isToggling = togglingId === pollId;
+              const isSending = sendingEmailId === pollId;
+              const isCopied = copiedId === pollId;
 
-                              return (
-                                <li key={idx} className="flex items-center before:content-['•'] before:mr-1.5 before:text-gray-400 truncate py-0.5">
-                                  <span className={isGuest ? 'text-gray-600 dark:text-gray-300 font-medium' : 'text-gray-800 dark:text-gray-200 font-medium'}>{displayVoter}</span>
-                                  {guestPhone && <span className="ml-1.5 text-[10px] text-gray-400">({guestPhone})</span>}
-                                  {isGuest && (
-                                    <span className="ml-2 text-[9px] font-bold px-1.5 py-0.5 bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 rounded">
-                                      Unauthorized
-                                    </span>
-                                  )}
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        </div>
-                      )}
+              return (
+                <div 
+                  key={pollId}
+                  className="bg-[var(--surface-1)] border border-[var(--hairline)] rounded-2xl p-5 sm:p-6 shadow-soft space-y-4 hover:border-[var(--accent)]/30 transition-all"
+                >
+                  {/* Poll Header */}
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                          poll.isActive 
+                            ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                            : 'bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30'
+                        }`}>
+                          {poll.isActive ? t('Active', 'செயலில்') : t('Closed', 'முடிந்தது')}
+                        </span>
+                        <span className="text-xs text-[var(--text-3)] font-medium">
+                          {poll.defaultLanguage === 'ta' ? 'தமிழ்' : 'English'}
+                        </span>
+                      </div>
+                      <h3 className="font-bold text-base sm:text-lg text-[var(--text)] tracking-tight">
+                        {poll.question}
+                      </h3>
                     </div>
-                  );
-                })}
-              </div>
-              <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-3 sm:space-y-0 text-xs text-gray-500 dark:text-gray-400">
-                <div>
-                  <span>By {poll.author}</span>
-                  <span className="mx-2">•</span>
-                  <span>{new Date(poll.createdAt).toLocaleDateString()}</span>
-                </div>
-                <div className="flex flex-wrap items-center gap-3">
-                  <button
-                    onClick={() => handleExportExcel(poll)}
-                    className="flex items-center space-x-1 text-green-600 hover:text-green-700 font-medium transition-colors"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>Export</span>
-                  </button>
-                  <button
-                    onClick={() => handleShare(poll.id || poll._id)}
-                    className="flex items-center space-x-1 text-blue-500 hover:text-blue-600 font-medium transition-colors"
-                  >
-                    {copiedId === (poll.id || poll._id) ? <CheckCircle className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
-                    <span>{copiedId === (poll.id || poll._id) ? 'Copied' : 'Share'}</span>
-                  </button>
 
-                  <button
-                    onClick={() => handleSendEmailNotification(poll.id || poll._id)}
-                    disabled={sendingEmailId === (poll.id || poll._id)}
-                    className="flex items-center space-x-1 text-purple-500 hover:text-purple-600 font-medium disabled:opacity-50 transition-colors"
-                  >
-                    {sendingEmailId === (poll.id || poll._id) ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Mail className="w-3.5 h-3.5" />}
-                    <span>{sendingEmailId === (poll.id || poll._id) ? 'Sending...' : 'Send Email'}</span>
-                  </button>
-                  
+                    <div className="flex items-center space-x-2 self-start sm:self-auto">
+                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-[var(--surface-2)] text-[var(--text)] border border-[var(--hairline)]">
+                        {poll.totalVotes || 0} {t('Votes', 'வாக்குகள்')}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Options Progress Bars & Voter Transparency */}
+                  <div className="space-y-3 pt-1">
+                    {poll.options.map(opt => {
+                      const percentage = poll.totalVotes > 0 ? Math.round((opt.votes / poll.totalVotes) * 100) : 0;
+                      return (
+                        <div key={opt.id} className="space-y-1.5">
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="font-semibold text-[var(--text)]">{opt.text}</span>
+                            <span className="font-bold text-[var(--accent)]">{percentage}% ({opt.votes || 0})</span>
+                          </div>
+                          
+                          <div className="w-full bg-[var(--surface-2)] rounded-full h-2.5 overflow-hidden">
+                            <div 
+                              className="bg-[var(--accent)] h-full rounded-full transition-all duration-500"
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+
+                          {/* Voter Transparency Log (Admin only) */}
+                          {opt.voters && opt.voters.length > 0 && (
+                            <details className="text-[11px] text-[var(--text-3)] bg-[var(--surface-2)]/60 rounded-xl p-2.5 border border-[var(--hairline)]">
+                              <summary className="font-semibold cursor-pointer text-[var(--text-2)] hover:text-[var(--text)]">
+                                {t('View Verified Voters', 'வாக்களித்தவர்கள் விவரம்')} ({opt.voters.length})
+                              </summary>
+                              <ul className="mt-2 space-y-1 max-h-32 overflow-y-auto pl-2">
+                                {opt.voters.map((voter, idx) => {
+                                  let isGuest = false;
+                                  let displayVoter = voter;
+                                  let guestPhone = '';
+                                  
+                                  if (voter.startsWith('GUEST::')) {
+                                    const parts = voter.split('::');
+                                    isGuest = true;
+                                    displayVoter = parts[1] || 'Guest';
+                                    guestPhone = parts[2] && parts[2] !== 'N/A' ? parts[2] : '';
+                                  } else if (voter.startsWith('USER::')) {
+                                    const parts = voter.split('::');
+                                    displayVoter = parts[1] || 'User';
+                                    guestPhone = parts[2] || '';
+                                  }
+
+                                  return (
+                                    <li key={idx} className="flex items-center text-xs text-[var(--text-2)] truncate">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] mr-2 flex-shrink-0" />
+                                      <span className="font-medium truncate">{displayVoter}</span>
+                                      {guestPhone && <span className="ml-1 text-[10px] text-[var(--text-3)]">({guestPhone})</span>}
+                                      {isGuest && (
+                                        <span className="ml-2 text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400">
+                                          Guest
+                                        </span>
+                                      )}
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            </details>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Poll Action Bar */}
+                  <div className="pt-3 border-t border-[var(--hairline)] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs text-[var(--text-3)]">
+                    <div>
+                      <span>{t('By', 'பதிவு:')} {poll.author}</span>
+                      <span className="mx-2">•</span>
+                      <span>{new Date(poll.createdAt).toLocaleDateString()}</span>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      {/* Export CSV */}
                       <button
-                        onClick={() => handleToggleStatus(poll.id || poll._id, poll.isActive)}
-                        disabled={togglingId === (poll.id || poll._id)}
-                        className="flex items-center space-x-1 text-amber-500 hover:text-amber-600 font-medium disabled:opacity-50 transition-colors"
+                        onClick={() => handleExportExcel(poll)}
+                        className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-[var(--surface-2)] text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 font-medium transition-colors"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>{t('Export CSV', 'CSV தரவிறக்கம்')}</span>
+                      </button>
+
+                      {/* Share Link */}
+                      <button
+                        onClick={() => handleShare(pollId)}
+                        className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-[var(--surface-2)] text-[var(--accent)] hover:bg-[var(--accent)]/10 font-medium transition-colors"
+                      >
+                        {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Share2 className="w-3.5 h-3.5" />}
+                        <span>{isCopied ? t('Copied!', 'நகலெடுக்கப்பட்டது!') : t('Share', 'பகிர்')}</span>
+                      </button>
+
+                      {/* Send Email Broadcast */}
+                      <button
+                        onClick={() => handleSendEmailNotification(pollId)}
+                        disabled={isSending}
+                        className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-[var(--surface-2)] text-purple-600 dark:text-purple-400 hover:bg-purple-500/10 font-medium transition-colors disabled:opacity-50"
+                      >
+                        {isSending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Mail className="w-3.5 h-3.5" />}
+                        <span>{isSending ? t('Sending...', 'அனுப்பப்படுகிறது...') : t('Email Alert', 'மின்னஞ்சல்')}</span>
+                      </button>
+
+                      {/* Toggle Active/Closed */}
+                      <button
+                        onClick={() => handleToggleStatus(pollId, poll.isActive)}
+                        disabled={isToggling}
+                        className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-[var(--surface-2)] text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 font-medium transition-colors disabled:opacity-50"
                       >
                         {poll.isActive ? <XCircle className="w-3.5 h-3.5" /> : <PlayCircle className="w-3.5 h-3.5" />}
-                        <span>{poll.isActive ? 'Close Poll' : 'Re-open'}</span>
+                        <span>{poll.isActive ? t('Close Poll', 'முடி') : t('Reopen', 'மீளத்திற')}</span>
                       </button>
 
+                      {/* Delete */}
                       <button
-                        onClick={() => handleDelete(poll.id || poll._id)}
-                        disabled={deletingId === (poll.id || poll._id)}
-                        className="flex items-center space-x-1 text-red-500 hover:text-red-600 font-medium disabled:opacity-50 transition-colors"
+                        onClick={() => handleDelete(pollId)}
+                        disabled={isDeleting}
+                        className="p-1.5 rounded-lg text-red-500 hover:bg-red-500/10 font-medium transition-colors disabled:opacity-50"
+                        title={t('Delete Poll', 'நீக்கு')}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
-                        <span>Delete</span>
                       </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))
+              );
+            })}
+          </div>
         )}
       </div>
     </div>
